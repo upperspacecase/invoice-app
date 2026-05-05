@@ -25,8 +25,8 @@ export type Invoice = {
 };
 
 export const initialBusiness: Business = {
-  name: "Big Action Ltd",
-  email: "tay@bigaction.co",
+  name: "Studio Ltd",
+  email: "hello@studio.co",
   payment: "Wise — IBAN GB29 NWBK 6016 1331 9268 19",
   company: "Company No. 12345678",
 };

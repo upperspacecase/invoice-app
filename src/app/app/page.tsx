@@ -1,14 +1,24 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { getState } from "@/lib/server/store";
+import { requireSession } from "@/lib/server/auth";
+import {
+  listAutomations,
+  listInvoices,
+  getWorkspace,
+} from "@/lib/server/store";
 import { getRates, convertSync } from "@/lib/fx";
 import { formatMoney } from "@/lib/currency";
 import { channelLabel, ChannelIcon } from "@/components/channel-icon";
 import type { CurrencyCode, Invoice } from "@/lib/types";
 
 export default async function LedgerPage() {
-  const { business, invoices, automations } = getState();
-  const rates = await getRates();
+  const { uid } = await requireSession();
+  const [{ business, invoices }, automations, rates] = await Promise.all([
+    getWorkspace(uid),
+    listAutomations(uid),
+    getRates(),
+  ]);
+  void listInvoices; // tree-shaking guard
 
   const unpaid = invoices.filter((i) => i.status === "sent");
 

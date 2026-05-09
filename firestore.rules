@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// All app reads/writes go through the admin SDK on the server, so client SDK
+// access stays read-only and scoped to the signed-in user. The admin SDK
+// bypasses these rules entirely.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/{path=**} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /apiKeys/{keyId} {
+      allow read, write: if false;
+    }
+  }
+}

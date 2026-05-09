@@ -1,10 +1,27 @@
 import "server-only";
-import type { ApiKey } from "../types";
-import { findApiKeyByToken, touchApiKey } from "./store";
+import { cookies } from "next/headers";
+import {
+  adminAuth,
+  SESSION_COOKIE_NAME,
+} from "@/lib/firebase/admin";
+import {
+  ensureUserSeeded,
+  findApiKeyByToken,
+  touchApiKey,
+} from "./store";
 
-export type AuthOk = { ok: true; key: ApiKey };
-export type AuthErr = { ok: false; status: 401 | 403; message: string };
-export type AuthResult = AuthOk | AuthErr;
+export type SessionUser = {
+  uid: string;
+  email: string | null;
+  name: string | null;
+};
+
+export type ApiAuthOk = {
+  ok: true;
+  uid: string;
+  keyId: string;
+};
+export type ApiAuthErr = { ok: false; status: 401 | 403; message: string };
 
 function extractBearer(req: Request): string | null {
   const header = req.headers.get("authorization");
@@ -13,20 +30,22 @@ function extractBearer(req: Request): string | null {
   return match ? match[1].trim() : null;
 }
 
-export function authenticate(req: Request): AuthResult {
+export async function authenticateApi(
+  req: Request
+): Promise<ApiAuthOk | ApiAuthErr> {
   const token = extractBearer(req);
   if (!token) {
     return { ok: false, status: 401, message: "Missing bearer token." };
   }
-  const key = findApiKeyByToken(token);
-  if (!key) {
+  const found = await findApiKeyByToken(token);
+  if (!found) {
     return { ok: false, status: 403, message: "Invalid or revoked key." };
   }
-  touchApiKey(key.id);
-  return { ok: true, key };
+  await touchApiKey(found.key.id);
+  return { ok: true, uid: found.uid, keyId: found.key.id };
 }
 
-export function authError(err: AuthErr): Response {
+export function apiAuthError(err: ApiAuthErr): Response {
   return Response.json(
     { error: err.message },
     {
@@ -37,4 +56,34 @@ export function authError(err: AuthErr): Response {
           : undefined,
     }
   );
+}
+
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const jar = await cookies();
+  const cookie = jar.get(SESSION_COOKIE_NAME)?.value;
+  if (!cookie) return null;
+  try {
+    const decoded = await adminAuth().verifySessionCookie(cookie, true);
+    return {
+      uid: decoded.uid,
+      email: decoded.email ?? null,
+      name: decoded.name ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export class UnauthorizedError extends Error {
+  constructor(message = "Sign in to continue.") {
+    super(message);
+    this.name = "UnauthorizedError";
+  }
+}
+
+export async function requireSession(): Promise<SessionUser> {
+  const user = await getSessionUser();
+  if (!user) throw new UnauthorizedError();
+  await ensureUserSeeded(user.uid, { email: user.email, displayName: user.name });
+  return user;
 }

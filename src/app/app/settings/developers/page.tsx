@@ -1,9 +1,11 @@
 import { FileText, Bot } from "lucide-react";
-import { getState } from "@/lib/server/store";
+import { requireSession } from "@/lib/server/auth";
+import { listApiKeys } from "@/lib/server/store";
 import { ApiKeysPanel } from "@/components/api-keys-panel";
 
-export default function SettingsDevelopersPage() {
-  const { apiKeys } = getState();
+export default async function SettingsDevelopersPage() {
+  const { uid } = await requireSession();
+  const apiKeys = await listApiKeys(uid);
 
   return (
     <div>

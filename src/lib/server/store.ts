@@ -1,10 +1,11 @@
 import "server-only";
 import { randomBytes, createHash } from "node:crypto";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { adminDb } from "@/lib/firebase/admin";
 import type {
   ActivityActor,
   ActivityEvent,
   ApiKey,
-  AppState,
   AutomationId,
   Business,
   Client,
@@ -16,90 +17,183 @@ import type {
 import {
   formatLabel,
   initialActivity,
-  initialApiKeys,
   initialAutomations,
   initialBusiness,
   initialClients,
   initialIntegrations,
   initialInvoices,
-  nextInvoiceId,
 } from "../demo-data";
 
-declare global {
-  // Persist the store across hot reloads in dev.
-  var __invoiceAppStore: AppState | undefined;
+const PROFILE_DOC = "profile";
+
+function userDoc(uid: string) {
+  return adminDb().collection("users").doc(uid);
 }
 
-function seed(): AppState {
-  return {
-    business: { ...initialBusiness },
-    clients: initialClients.map((c) => ({ ...c })),
-    invoices: initialInvoices.map((i) => ({ ...i })),
-    integrations: initialIntegrations.map((i) => ({ ...i })),
-    apiKeys: initialApiKeys.map((k) => ({ ...k })),
-    automations: initialAutomations.map((a) => ({ ...a })),
-    activity: initialActivity.map((e) => ({ ...e })),
+function clientsCol(uid: string) {
+  return userDoc(uid).collection("clients");
+}
+
+function invoicesCol(uid: string) {
+  return userDoc(uid).collection("invoices");
+}
+
+function integrationsCol(uid: string) {
+  return userDoc(uid).collection("integrations");
+}
+
+function automationsCol(uid: string) {
+  return userDoc(uid).collection("automations");
+}
+
+function activityCol(uid: string) {
+  return userDoc(uid).collection("activity");
+}
+
+const apiKeysCol = () => adminDb().collection("apiKeys");
+
+function fromTimestamp(v: unknown): number {
+  if (v instanceof Timestamp) return v.toMillis();
+  if (typeof v === "number") return v;
+  return 0;
+}
+
+// ---------- bootstrap ----------
+
+export async function ensureUserSeeded(
+  uid: string,
+  hint: { email?: string | null; displayName?: string | null }
+) {
+  const profileRef = userDoc(uid).collection("meta").doc(PROFILE_DOC);
+  const snap = await profileRef.get();
+  if (snap.exists) return;
+  const business: Business = {
+    ...initialBusiness,
+    name: hint.displayName?.trim() || initialBusiness.name,
+    email: hint.email || initialBusiness.email,
   };
+  const batch = adminDb().batch();
+  batch.set(profileRef, { ...business, createdAt: FieldValue.serverTimestamp() });
+
+  for (const c of initialClients) {
+    batch.set(clientsCol(uid).doc(c.id), {
+      ...c,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  }
+  for (const inv of initialInvoices) {
+    batch.set(invoicesCol(uid).doc(inv.id), {
+      ...inv,
+      sentAt: Timestamp.fromMillis(inv.sentAt),
+      paidAt: inv.paidAt ? Timestamp.fromMillis(inv.paidAt) : null,
+    });
+  }
+  for (const it of initialIntegrations) {
+    batch.set(integrationsCol(uid).doc(it.id), {
+      ...it,
+      connectedAt: it.connectedAt ? Timestamp.fromMillis(it.connectedAt) : null,
+    });
+  }
+  for (const au of initialAutomations) {
+    batch.set(automationsCol(uid).doc(au.id), { ...au });
+  }
+  for (const ev of initialActivity) {
+    batch.set(activityCol(uid).doc(ev.id), {
+      ...ev,
+      at: Timestamp.fromMillis(ev.at),
+    });
+  }
+  await batch.commit();
 }
 
-const state: AppState =
-  globalThis.__invoiceAppStore ?? (globalThis.__invoiceAppStore = seed());
+// ---------- helpers ----------
 
-function snapshot<T>(v: T): T {
-  return JSON.parse(JSON.stringify(v)) as T;
-}
-
-export function getState(): AppState {
-  return snapshot(state);
-}
-
-function pushActivity(
-  who: ActivityActor,
-  text: string,
-  meta: string
-): ActivityEvent {
-  const ev: ActivityEvent = {
-    id: `ev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
-    who,
-    text,
-    meta,
-    at: Date.now(),
-  };
-  state.activity = [ev, ...state.activity];
-  return ev;
-}
-
-export function logActivity(
+async function pushActivity(
+  uid: string,
   who: ActivityActor,
   text: string,
   meta = ""
-): ActivityEvent {
-  return snapshot(pushActivity(who, text, meta));
+) {
+  const ref = activityCol(uid).doc();
+  await ref.set({
+    id: ref.id,
+    who,
+    text,
+    meta,
+    at: FieldValue.serverTimestamp(),
+  });
 }
 
-// ---------- business ----------
-
-export function updateBusiness(patch: Partial<Business>): Business {
-  state.business = { ...state.business, ...patch };
-  return snapshot(state.business);
+export async function logActivity(
+  uid: string,
+  who: ActivityActor,
+  text: string,
+  meta = ""
+) {
+  await pushActivity(uid, who, text, meta);
 }
 
-export function setDefaultCurrency(code: CurrencyCode): Business {
-  if (state.business.currency === code) return snapshot(state.business);
-  state.business.currency = code;
-  pushActivity("you", `Set default currency to ${code}`, "settings.account");
-  return snapshot(state.business);
+// ---------- business / profile ----------
+
+async function getBusiness(uid: string): Promise<Business> {
+  const ref = userDoc(uid).collection("meta").doc(PROFILE_DOC);
+  const snap = await ref.get();
+  const data = snap.exists ? (snap.data() as Business) : initialBusiness;
+  return {
+    name: data.name,
+    email: data.email,
+    payment: data.payment,
+    company: data.company,
+    currency: data.currency,
+  };
+}
+
+export async function updateBusiness(
+  uid: string,
+  patch: Partial<Business>
+): Promise<Business> {
+  const ref = userDoc(uid).collection("meta").doc(PROFILE_DOC);
+  await ref.set(patch, { merge: true });
+  return getBusiness(uid);
+}
+
+export async function setDefaultCurrency(
+  uid: string,
+  code: CurrencyCode
+): Promise<Business> {
+  const current = await getBusiness(uid);
+  if (current.currency === code) return current;
+  const next = await updateBusiness(uid, { currency: code });
+  await pushActivity(uid, "you", `Set default currency to ${code}`, "settings.account");
+  return next;
 }
 
 // ---------- clients ----------
 
-export function listClients(): Client[] {
-  return snapshot(state.clients);
+export async function listClients(uid: string): Promise<Client[]> {
+  const snap = await clientsCol(uid).orderBy("name").get();
+  return snap.docs.map((d) => normaliseClient(d.id, d.data()));
 }
 
-export function getClient(id: string): Client | null {
-  const c = state.clients.find((c) => c.id === id);
-  return c ? snapshot(c) : null;
+export async function getClient(uid: string, id: string): Promise<Client | null> {
+  const snap = await clientsCol(uid).doc(id).get();
+  if (!snap.exists) return null;
+  return normaliseClient(snap.id, snap.data() ?? {});
+}
+
+function normaliseClient(id: string, data: Record<string, unknown>): Client {
+  return {
+    id,
+    name: String(data.name ?? ""),
+    email: String(data.email ?? ""),
+    lastAmount: typeof data.lastAmount === "number" ? data.lastAmount : 0,
+    currency: (data.currency as CurrencyCode) ?? "USD",
+    delivery: (data.delivery as DeliveryChannel) ?? "email",
+    deliveryHandle:
+      typeof data.deliveryHandle === "string"
+        ? data.deliveryHandle
+        : undefined,
+  };
 }
 
 function slug(name: string): string {
@@ -112,11 +206,13 @@ function slug(name: string): string {
   );
 }
 
-function uniqueId(prefix: string, taken: Set<string>): string {
-  if (!taken.has(prefix)) return prefix;
+async function uniqueClientId(uid: string, base: string): Promise<string> {
+  let candidate = base;
   let n = 2;
-  while (taken.has(`${prefix}-${n}`)) n++;
-  return `${prefix}-${n}`;
+  while ((await clientsCol(uid).doc(candidate).get()).exists) {
+    candidate = `${base}-${n++}`;
+  }
+  return candidate;
 }
 
 type CreateClientInput = {
@@ -127,46 +223,86 @@ type CreateClientInput = {
   deliveryHandle?: string;
 };
 
-export function createClient(input: CreateClientInput): Client {
-  const taken = new Set(state.clients.map((c) => c.id));
+export async function createClient(
+  uid: string,
+  input: CreateClientInput
+): Promise<Client> {
+  const business = await getBusiness(uid);
+  const id = await uniqueClientId(uid, slug(input.name));
   const client: Client = {
-    id: uniqueId(slug(input.name), taken),
+    id,
     name: input.name,
     email: input.email,
     lastAmount: 0,
-    currency: input.currency ?? state.business.currency,
+    currency: input.currency ?? business.currency,
     delivery: input.delivery ?? "email",
     deliveryHandle: input.deliveryHandle,
   };
-  state.clients = [...state.clients, client];
-  pushActivity("you", `Added client ${client.name}`, "client.create");
-  return snapshot(client);
+  await clientsCol(uid).doc(id).set({
+    ...client,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await pushActivity(uid, "you", `Added client ${client.name}`, "client.create");
+  return client;
 }
 
-export function updateClient(
+export async function updateClient(
+  uid: string,
   id: string,
   patch: Partial<Omit<Client, "id">>
-): Client | null {
-  const idx = state.clients.findIndex((c) => c.id === id);
-  if (idx === -1) return null;
-  const next = { ...state.clients[idx], ...patch };
-  state.clients = [
-    ...state.clients.slice(0, idx),
-    next,
-    ...state.clients.slice(idx + 1),
-  ];
-  return snapshot(next);
+): Promise<Client | null> {
+  const ref = clientsCol(uid).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const cleaned: Record<string, unknown> = { ...patch };
+  if (patch.deliveryHandle === undefined) delete cleaned.deliveryHandle;
+  await ref.set(cleaned, { merge: true });
+  return getClient(uid, id);
 }
 
 // ---------- invoices ----------
 
-export function listInvoices(): Invoice[] {
-  return snapshot(state.invoices);
+function normaliseInvoice(id: string, data: Record<string, unknown>): Invoice {
+  return {
+    id,
+    clientId: String(data.clientId ?? ""),
+    clientName: String(data.clientName ?? ""),
+    clientEmail: String(data.clientEmail ?? ""),
+    amount: typeof data.amount === "number" ? data.amount : 0,
+    currency: (data.currency as CurrencyCode) ?? "USD",
+    description: String(data.description ?? ""),
+    date: String(data.date ?? ""),
+    status: data.status === "paid" ? "paid" : "sent",
+    channel: (data.channel as DeliveryChannel) ?? "email",
+    sentAt: fromTimestamp(data.sentAt),
+    paidAt: data.paidAt ? fromTimestamp(data.paidAt) : undefined,
+    lastReminderAt: data.lastReminderAt
+      ? fromTimestamp(data.lastReminderAt)
+      : undefined,
+  };
 }
 
-export function getInvoice(id: string): Invoice | null {
-  const inv = state.invoices.find((i) => i.id === id);
-  return inv ? snapshot(inv) : null;
+export async function listInvoices(uid: string): Promise<Invoice[]> {
+  const snap = await invoicesCol(uid).orderBy("sentAt", "desc").get();
+  return snap.docs.map((d) => normaliseInvoice(d.id, d.data()));
+}
+
+export async function getInvoice(
+  uid: string,
+  id: string
+): Promise<Invoice | null> {
+  const snap = await invoicesCol(uid).doc(id).get();
+  if (!snap.exists) return null;
+  return normaliseInvoice(snap.id, snap.data() ?? {});
+}
+
+async function nextInvoiceId(uid: string): Promise<string> {
+  const snap = await invoicesCol(uid).get();
+  const numbers = snap.docs
+    .map((d) => parseInt(d.id.replace(/\D/g, ""), 10))
+    .filter((n) => Number.isFinite(n));
+  const max = numbers.length ? Math.max(...numbers) : 14;
+  return `INV-${String(max + 1).padStart(3, "0")}`;
 }
 
 type CreateInvoiceInput = {
@@ -178,12 +314,15 @@ type CreateInvoiceInput = {
   actor?: ActivityActor;
 };
 
-export function createInvoice(input: CreateInvoiceInput): Invoice | null {
-  const client = state.clients.find((c) => c.id === input.clientId);
+export async function createInvoice(
+  uid: string,
+  input: CreateInvoiceInput
+): Promise<Invoice | null> {
+  const client = await getClient(uid, input.clientId);
   if (!client) return null;
   const channel = input.channelOverride ?? client.delivery;
   const currency = input.currency ?? client.currency;
-  const id = nextInvoiceId(state.invoices);
+  const id = await nextInvoiceId(uid);
   const now = Date.now();
   const invoice: Invoice = {
     id,
@@ -198,122 +337,162 @@ export function createInvoice(input: CreateInvoiceInput): Invoice | null {
     channel,
     sentAt: now,
   };
-  state.invoices = [invoice, ...state.invoices];
-  state.clients = state.clients.map((c) =>
-    c.id === client.id ? { ...c, lastAmount: input.amount } : c
+  const batch = adminDb().batch();
+  batch.set(invoicesCol(uid).doc(id), {
+    ...invoice,
+    sentAt: Timestamp.fromMillis(now),
+    paidAt: null,
+  });
+  batch.set(
+    clientsCol(uid).doc(client.id),
+    { lastAmount: input.amount },
+    { merge: true }
   );
+  await batch.commit();
+
   const channelLabel =
     channel === "email"
       ? `email to ${client.email}`
       : channel === "portal"
       ? "portal link"
       : channel.charAt(0).toUpperCase() + channel.slice(1);
-  pushActivity(
+  await pushActivity(
+    uid,
     input.actor ?? "you",
     `Sent ${id} to ${client.name}`,
     `via ${channelLabel}`
   );
-  return snapshot(invoice);
+  return invoice;
 }
 
-export function markInvoicePaid(
+export async function markInvoicePaid(
+  uid: string,
   id: string,
   actor: ActivityActor = "you"
-): Invoice | null {
-  const idx = state.invoices.findIndex((i) => i.id === id);
-  if (idx === -1) return null;
-  const inv = state.invoices[idx];
-  if (inv.status === "paid") return snapshot(inv);
-  const next: Invoice = { ...inv, status: "paid", paidAt: Date.now() };
-  state.invoices = [
-    ...state.invoices.slice(0, idx),
-    next,
-    ...state.invoices.slice(idx + 1),
-  ];
-  pushActivity(actor, `Marked ${id} paid`, "manual");
-  return snapshot(next);
+): Promise<Invoice | null> {
+  const ref = invoicesCol(uid).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const inv = normaliseInvoice(snap.id, snap.data() ?? {});
+  if (inv.status === "paid") return inv;
+  const now = Date.now();
+  await ref.set(
+    { status: "paid", paidAt: Timestamp.fromMillis(now) },
+    { merge: true }
+  );
+  await pushActivity(uid, actor, `Marked ${id} paid`, "manual");
+  return { ...inv, status: "paid", paidAt: now };
 }
 
-export function remindInvoice(
+export async function remindInvoice(
+  uid: string,
   id: string,
   actor: ActivityActor = "agent"
-): Invoice | null {
-  const idx = state.invoices.findIndex((i) => i.id === id);
-  if (idx === -1) return null;
-  const inv = state.invoices[idx];
-  if (inv.status !== "sent") return snapshot(inv);
-  const next: Invoice = { ...inv, lastReminderAt: Date.now() };
-  state.invoices = [
-    ...state.invoices.slice(0, idx),
-    next,
-    ...state.invoices.slice(idx + 1),
-  ];
-  pushActivity(actor, `Sent reminder for ${id}`, `to ${inv.clientName}`);
-  return snapshot(next);
+): Promise<Invoice | null> {
+  const ref = invoicesCol(uid).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const inv = normaliseInvoice(snap.id, snap.data() ?? {});
+  if (inv.status !== "sent") return inv;
+  const now = Date.now();
+  await ref.set(
+    { lastReminderAt: Timestamp.fromMillis(now) },
+    { merge: true }
+  );
+  await pushActivity(uid, actor, `Sent reminder for ${id}`, `to ${inv.clientName}`);
+  return { ...inv, lastReminderAt: now };
 }
 
 // ---------- integrations ----------
 
-export function listIntegrations() {
-  return snapshot(state.integrations);
+function normaliseIntegration(id: string, data: Record<string, unknown>) {
+  return {
+    id: id as IntegrationId,
+    name: String(data.name ?? ""),
+    description: String(data.description ?? ""),
+    color: String(data.color ?? "#0a0a0a"),
+    connected: Boolean(data.connected),
+    account:
+      typeof data.account === "string" && data.account ? data.account : undefined,
+    connectedAt: data.connectedAt ? fromTimestamp(data.connectedAt) : undefined,
+  };
 }
 
-export function setIntegrationConnected(
+export async function listIntegrations(uid: string) {
+  const snap = await integrationsCol(uid).get();
+  return snap.docs.map((d) => normaliseIntegration(d.id, d.data()));
+}
+
+export async function setIntegrationConnected(
+  uid: string,
   id: IntegrationId,
   connected: boolean,
   account?: string
 ) {
-  const idx = state.integrations.findIndex((it) => it.id === id);
-  if (idx === -1) return null;
-  const next = {
-    ...state.integrations[idx],
-    connected,
-    account: connected ? account ?? `studio-ltd-${id}` : undefined,
-    connectedAt: connected ? Date.now() : undefined,
-  };
-  state.integrations = [
-    ...state.integrations.slice(0, idx),
-    next,
-    ...state.integrations.slice(idx + 1),
-  ];
-  pushActivity(
+  const ref = integrationsCol(uid).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const existing = normaliseIntegration(snap.id, snap.data() ?? {});
+  const update: Record<string, unknown> = { connected };
+  if (connected) {
+    update.account = account ?? `${existing.name.toLowerCase()}-account`;
+    update.connectedAt = FieldValue.serverTimestamp();
+  } else {
+    update.account = FieldValue.delete();
+    update.connectedAt = FieldValue.delete();
+  }
+  await ref.set(update, { merge: true });
+  await pushActivity(
+    uid,
     "you",
-    `${connected ? "Connected" : "Disconnected"} ${next.name}`,
+    `${connected ? "Connected" : "Disconnected"} ${existing.name}`,
     connected
       ? "OAuth flow stubbed for demo · scope: invoice.write"
       : "Disconnected"
   );
-  return snapshot(next);
+  const next = await ref.get();
+  return normaliseIntegration(next.id, next.data() ?? {});
 }
 
 // ---------- automations ----------
 
-export function listAutomations() {
-  return snapshot(state.automations);
+function normaliseAutomation(id: string, data: Record<string, unknown>) {
+  return {
+    id: id as AutomationId,
+    title: String(data.title ?? ""),
+    body: String(data.body ?? ""),
+    enabled: Boolean(data.enabled),
+  };
 }
 
-export function setAutomationEnabled(id: AutomationId, enabled: boolean) {
-  const idx = state.automations.findIndex((a) => a.id === id);
-  if (idx === -1) return null;
-  const next = { ...state.automations[idx], enabled };
-  state.automations = [
-    ...state.automations.slice(0, idx),
-    next,
-    ...state.automations.slice(idx + 1),
-  ];
-  pushActivity(
+export async function listAutomations(uid: string) {
+  const snap = await automationsCol(uid).get();
+  return snap.docs.map((d) => normaliseAutomation(d.id, d.data()));
+}
+
+export async function setAutomationEnabled(
+  uid: string,
+  id: AutomationId,
+  enabled: boolean
+) {
+  const ref = automationsCol(uid).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  await ref.set({ enabled }, { merge: true });
+  const after = normaliseAutomation(id, { ...(snap.data() ?? {}), enabled });
+  await pushActivity(
+    uid,
     "you",
-    `${enabled ? "Enabled" : "Disabled"} ${next.title.toLowerCase()}`,
+    `${enabled ? "Enabled" : "Disabled"} ${after.title.toLowerCase()}`,
     "settings.automations"
   );
-  return snapshot(next);
+  return after;
 }
 
 // ---------- API keys ----------
 
 export type CreatedApiKey = {
   meta: ApiKey;
-  // Plaintext token, surfaced once.
   token: string;
 };
 
@@ -321,52 +500,132 @@ function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-export function listApiKeys(): ApiKey[] {
-  return snapshot(state.apiKeys);
+function normaliseKey(id: string, data: Record<string, unknown>): ApiKey {
+  return {
+    id,
+    name: String(data.name ?? ""),
+    prefix: String(data.prefix ?? ""),
+    tokenHash: String(data.tokenHash ?? ""),
+    createdAt: fromTimestamp(data.createdAt),
+    lastUsedAt: data.lastUsedAt ? fromTimestamp(data.lastUsedAt) : undefined,
+  };
 }
 
-export function createApiKey(name: string): CreatedApiKey {
+export async function listApiKeys(uid: string): Promise<ApiKey[]> {
+  const snap = await apiKeysCol().where("uid", "==", uid).get();
+  return snap.docs.map((d) => normaliseKey(d.id, d.data()));
+}
+
+export async function createApiKey(
+  uid: string,
+  name: string
+): Promise<CreatedApiKey> {
   const raw = randomBytes(24).toString("base64url");
   const token = `sk_live_${raw}`;
   const prefix = `sk_live_•••• ${raw.slice(-4)}`;
-  const meta: ApiKey = {
-    id: `key_${Date.now().toString(36)}_${randomBytes(3).toString("hex")}`,
+  const ref = apiKeysCol().doc();
+  const data = {
+    uid,
     name,
     prefix,
     tokenHash: hashToken(token),
+    createdAt: FieldValue.serverTimestamp(),
+  };
+  await ref.set(data);
+  await pushActivity(uid, "you", `Created API key "${name}"`, prefix);
+  const meta: ApiKey = {
+    id: ref.id,
+    name,
+    prefix,
+    tokenHash: data.tokenHash,
     createdAt: Date.now(),
   };
-  state.apiKeys = [meta, ...state.apiKeys];
-  pushActivity("you", `Created API key "${name}"`, prefix);
-  return { meta: snapshot(meta), token };
+  return { meta, token };
 }
 
-export function deleteApiKey(id: string): boolean {
-  const target = state.apiKeys.find((k) => k.id === id);
-  if (!target) return false;
-  state.apiKeys = state.apiKeys.filter((k) => k.id !== id);
-  pushActivity("you", `Revoked API key "${target.name}"`, target.prefix);
+export async function deleteApiKey(uid: string, id: string): Promise<boolean> {
+  const ref = apiKeysCol().doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  const data = snap.data() ?? {};
+  if (data.uid !== uid) return false;
+  await ref.delete();
+  await pushActivity(
+    uid,
+    "you",
+    `Revoked API key "${data.name}"`,
+    String(data.prefix ?? "")
+  );
   return true;
 }
 
-export function findApiKeyByToken(token: string): ApiKey | null {
+export async function findApiKeyByToken(
+  token: string
+): Promise<{ uid: string; key: ApiKey } | null> {
   const hash = hashToken(token);
-  const key = state.apiKeys.find((k) => k.tokenHash === hash);
-  return key ? snapshot(key) : null;
+  const snap = await apiKeysCol().where("tokenHash", "==", hash).limit(1).get();
+  if (snap.empty) return null;
+  const doc = snap.docs[0];
+  const data = doc.data();
+  return {
+    uid: String(data.uid ?? ""),
+    key: normaliseKey(doc.id, data),
+  };
 }
 
-export function touchApiKey(id: string): void {
-  const idx = state.apiKeys.findIndex((k) => k.id === id);
-  if (idx === -1) return;
-  state.apiKeys = [
-    ...state.apiKeys.slice(0, idx),
-    { ...state.apiKeys[idx], lastUsedAt: Date.now() },
-    ...state.apiKeys.slice(idx + 1),
-  ];
+export async function touchApiKey(id: string): Promise<void> {
+  await apiKeysCol().doc(id).set(
+    { lastUsedAt: FieldValue.serverTimestamp() },
+    { merge: true }
+  );
 }
 
 // ---------- activity ----------
 
-export function listActivity(limit = 50): ActivityEvent[] {
-  return snapshot(state.activity.slice(0, limit));
+export async function listActivity(
+  uid: string,
+  limit = 50
+): Promise<ActivityEvent[]> {
+  const snap = await activityCol(uid).orderBy("at", "desc").limit(limit).get();
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      who: (data.who as ActivityActor) ?? "system",
+      text: String(data.text ?? ""),
+      meta: String(data.meta ?? ""),
+      at: fromTimestamp(data.at),
+    };
+  });
+}
+
+// ---------- aggregate ----------
+
+export async function getWorkspace(uid: string) {
+  const [
+    business,
+    clients,
+    invoices,
+    integrations,
+    automations,
+    apiKeys,
+    activity,
+  ] = await Promise.all([
+    getBusiness(uid),
+    listClients(uid),
+    listInvoices(uid),
+    listIntegrations(uid),
+    listAutomations(uid),
+    listApiKeys(uid),
+    listActivity(uid),
+  ]);
+  return {
+    business,
+    clients,
+    invoices,
+    integrations,
+    automations,
+    apiKeys,
+    activity,
+  };
 }

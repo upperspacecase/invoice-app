@@ -15,6 +15,7 @@ import {
   updateBusiness,
   updateClient,
 } from "@/lib/server/store";
+import { requireSession } from "@/lib/server/auth";
 import { isCurrencyCode } from "@/lib/currency";
 import type {
   AutomationId,
@@ -45,7 +46,8 @@ function refreshAll() {
 
 export async function setDefaultCurrencyAction(code: CurrencyCode) {
   if (!isCurrencyCode(code)) throw new Error("Bad currency");
-  const next = setDefaultCurrency(code);
+  const { uid } = await requireSession();
+  const next = await setDefaultCurrency(uid, code);
   refreshAll();
   return next;
 }
@@ -54,7 +56,8 @@ export async function updateBusinessAction(patch: Partial<Business>) {
   if (patch.currency && !isCurrencyCode(patch.currency)) {
     throw new Error("Bad currency");
   }
-  const next = updateBusiness(patch);
+  const { uid } = await requireSession();
+  const next = await updateBusiness(uid, patch);
   refreshAll();
   return next;
 }
@@ -76,7 +79,8 @@ export async function createClientAction(input: {
   if (input.delivery && !isDelivery(input.delivery)) {
     throw new Error("Bad delivery");
   }
-  const client = createClient(input);
+  const { uid } = await requireSession();
+  const client = await createClient(uid, input);
   refreshAll();
   return client;
 }
@@ -97,7 +101,8 @@ export async function updateClientAction(
   if (patch.delivery && !isDelivery(patch.delivery)) {
     throw new Error("Bad delivery");
   }
-  const next = updateClient(id, patch);
+  const { uid } = await requireSession();
+  const next = await updateClient(uid, id, patch);
   if (!next) throw new Error("Client not found");
   refreshAll();
   return next;
@@ -121,21 +126,24 @@ export async function createInvoiceAction(input: {
   if (input.channelOverride && !isDelivery(input.channelOverride)) {
     throw new Error("Bad channel");
   }
-  const inv = createInvoice(input);
+  const { uid } = await requireSession();
+  const inv = await createInvoice(uid, input);
   if (!inv) throw new Error("Client not found");
   refreshAll();
   return inv;
 }
 
 export async function markInvoicePaidAction(id: string) {
-  const inv = markInvoicePaid(id, "you");
+  const { uid } = await requireSession();
+  const inv = await markInvoicePaid(uid, id, "you");
   if (!inv) throw new Error("Invoice not found");
   refreshAll();
   return inv;
 }
 
 export async function remindInvoiceAction(id: string) {
-  const inv = remindInvoice(id, "you");
+  const { uid } = await requireSession();
+  const inv = await remindInvoice(uid, id, "you");
   if (!inv) throw new Error("Invoice not found");
   refreshAll();
   return inv;
@@ -147,14 +155,16 @@ export async function connectIntegrationAction(
   id: IntegrationId,
   account?: string
 ) {
-  const next = setIntegrationConnected(id, true, account);
+  const { uid } = await requireSession();
+  const next = await setIntegrationConnected(uid, id, true, account);
   if (!next) throw new Error("Unknown integration");
   refreshAll();
   return next;
 }
 
 export async function disconnectIntegrationAction(id: IntegrationId) {
-  const next = setIntegrationConnected(id, false);
+  const { uid } = await requireSession();
+  const next = await setIntegrationConnected(uid, id, false);
   if (!next) throw new Error("Unknown integration");
   refreshAll();
   return next;
@@ -163,7 +173,8 @@ export async function disconnectIntegrationAction(id: IntegrationId) {
 // ---------- automations ----------
 
 export async function setAutomationAction(id: AutomationId, enabled: boolean) {
-  const next = setAutomationEnabled(id, enabled);
+  const { uid } = await requireSession();
+  const next = await setAutomationEnabled(uid, id, enabled);
   if (!next) throw new Error("Unknown automation");
   refreshAll();
   return next;
@@ -173,18 +184,21 @@ export async function setAutomationAction(id: AutomationId, enabled: boolean) {
 
 export async function createApiKeyAction(name: string) {
   if (!name.trim()) throw new Error("Key name is required");
-  const created = createApiKey(name.trim());
+  const { uid } = await requireSession();
+  const created = await createApiKey(uid, name.trim());
   refreshAll();
   return created;
 }
 
 export async function deleteApiKeyAction(id: string) {
-  const ok = deleteApiKey(id);
+  const { uid } = await requireSession();
+  const ok = await deleteApiKey(uid, id);
   if (!ok) throw new Error("Key not found");
   refreshAll();
   return { id };
 }
 
 export async function listApiKeysAction() {
-  return listApiKeys();
+  const { uid } = await requireSession();
+  return listApiKeys(uid);
 }

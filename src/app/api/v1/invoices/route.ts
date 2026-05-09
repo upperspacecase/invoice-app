@@ -1,4 +1,4 @@
-import { authenticate, authError } from "@/lib/server/auth";
+import { apiAuthError, authenticateApi } from "@/lib/server/auth";
 import { createInvoice, listInvoices } from "@/lib/server/store";
 import { isCurrencyCode } from "@/lib/currency";
 import type { CurrencyCode, DeliveryChannel, InvoiceStatus } from "@/lib/types";
@@ -21,14 +21,14 @@ function isStatus(v: unknown): v is InvoiceStatus {
 }
 
 export async function GET(req: Request) {
-  const auth = authenticate(req);
-  if (!auth.ok) return authError(auth);
+  const auth = await authenticateApi(req);
+  if (!auth.ok) return apiAuthError(auth);
   const url = new URL(req.url);
   const status = url.searchParams.get("status");
   const clientId = url.searchParams.get("clientId");
   const limit = parseInt(url.searchParams.get("limit") || "100", 10);
 
-  let result = listInvoices();
+  let result = await listInvoices(auth.uid);
   if (status && isStatus(status)) {
     result = result.filter((i) => i.status === status);
   }
@@ -42,8 +42,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const auth = authenticate(req);
-  if (!auth.ok) return authError(auth);
+  const auth = await authenticateApi(req);
+  if (!auth.ok) return apiAuthError(auth);
 
   let body: unknown;
   try {
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Bad channel." }, { status: 400 });
   }
 
-  const inv = createInvoice({
+  const inv = await createInvoice(auth.uid, {
     clientId: b.clientId,
     amount,
     description:

@@ -1,8 +1,10 @@
-import { getState } from "@/lib/server/store";
+import { requireSession } from "@/lib/server/auth";
+import { listIntegrations } from "@/lib/server/store";
 import { IntegrationsList } from "@/components/integrations-list";
 
-export default function SettingsIntegrationsPage() {
-  const { integrations } = getState();
+export default async function SettingsIntegrationsPage() {
+  const { uid } = await requireSession();
+  const integrations = await listIntegrations(uid);
 
   return (
     <div>

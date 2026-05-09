@@ -1,8 +1,10 @@
-import { getState } from "@/lib/server/store";
+import { requireSession } from "@/lib/server/auth";
+import { listAutomations } from "@/lib/server/store";
 import { AutomationsList } from "@/components/automations-list";
 
-export default function SettingsAutomationsPage() {
-  const { automations } = getState();
+export default async function SettingsAutomationsPage() {
+  const { uid } = await requireSession();
+  const automations = await listAutomations(uid);
   return (
     <div>
       <p className="text-sm text-mute mb-6">

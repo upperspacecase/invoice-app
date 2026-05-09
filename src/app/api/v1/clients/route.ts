@@ -1,4 +1,4 @@
-import { authenticate, authError } from "@/lib/server/auth";
+import { apiAuthError, authenticateApi } from "@/lib/server/auth";
 import { createClient, listClients } from "@/lib/server/store";
 import { isCurrencyCode } from "@/lib/currency";
 import type { CurrencyCode, DeliveryChannel } from "@/lib/types";
@@ -17,14 +17,14 @@ function isDelivery(v: unknown): v is DeliveryChannel {
 }
 
 export async function GET(req: Request) {
-  const auth = authenticate(req);
-  if (!auth.ok) return authError(auth);
-  return Response.json({ clients: listClients() });
+  const auth = await authenticateApi(req);
+  if (!auth.ok) return apiAuthError(auth);
+  return Response.json({ clients: await listClients(auth.uid) });
 }
 
 export async function POST(req: Request) {
-  const auth = authenticate(req);
-  if (!auth.ok) return authError(auth);
+  const auth = await authenticateApi(req);
+  if (!auth.ok) return apiAuthError(auth);
 
   let body: unknown;
   try {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Bad delivery channel." }, { status: 400 });
   }
 
-  const client = createClient({
+  const client = await createClient(auth.uid, {
     name: b.name.trim(),
     email: b.email.trim(),
     currency: isCurrencyCode(b.currency) ? (b.currency as CurrencyCode) : undefined,

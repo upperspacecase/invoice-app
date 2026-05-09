@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { SignInForm } from "@/components/sign-in-form";
 
 export default function SignInPage() {
   return (
@@ -25,32 +27,11 @@ export default function SignInPage() {
           <p className="text-sm text-mute mb-8">
             We&apos;ll email you a link. No password.
           </p>
-
-          <form action="/app" className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-xs uppercase tracking-widest text-mute mb-2"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="you@studio.co"
-                className="w-full h-12 px-4 rounded-md border border-rule bg-card outline-none focus:border-ink/40"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full h-12 rounded-md bg-ink text-paper text-sm font-medium hover:bg-ink/90 transition-colors"
-            >
-              Continue
-            </button>
-          </form>
-
+          <Suspense
+            fallback={<div className="text-sm text-mute">Loading…</div>}
+          >
+            <SignInForm />
+          </Suspense>
           <p className="text-xs text-mute mt-8 text-center">
             <Link href="/" className="underline underline-offset-4">
               Back to home

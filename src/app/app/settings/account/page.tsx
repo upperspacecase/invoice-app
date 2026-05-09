@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { User } from "lucide-react";
-import { getState } from "@/lib/server/store";
+import { requireSession } from "@/lib/server/auth";
+import { getWorkspace } from "@/lib/server/store";
 import { BusinessFields } from "@/components/business-fields";
 import { CurrencyDefaultPicker } from "@/components/currency-default-picker";
 
-export default function SettingsAccountPage() {
-  const { business, clients } = getState();
+export default async function SettingsAccountPage() {
+  const { uid } = await requireSession();
+  const { business, clients } = await getWorkspace(uid);
 
   return (
     <div>

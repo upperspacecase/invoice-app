@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Play, User, Users, FileText } from "lucide-react";
 import { HeroCard } from "@/components/hero-card";
+import { PricingBlock } from "@/components/pricing-block";
 
 export default function LandingPage() {
   return (
@@ -10,7 +11,8 @@ export default function LandingPage() {
       <main className="flex-1">
         <Hero />
         <HowItWorks />
-        <Pricing />
+        <PricingBlock />
+        <CloseCTA />
       </main>
 
       <Footer />
@@ -32,6 +34,9 @@ function Nav() {
           <a href="#how-it-works" className="text-sm hidden sm:inline">
             How it works
           </a>
+          <a href="#pricing" className="text-sm hidden sm:inline">
+            Pricing
+          </a>
           <Link href="/signin" className="text-sm hidden sm:inline">
             Sign in
           </Link>
@@ -39,7 +44,7 @@ function Nav() {
             href="/signin"
             className="text-sm bg-ink text-paper px-4 py-2 rounded-md hover:bg-ink/90 transition-colors"
           >
-            Try it
+            Send your first invoice — free
           </Link>
         </nav>
       </div>
@@ -56,29 +61,32 @@ function Hero() {
             className="font-serif text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-tight"
             style={{ fontWeight: 400 }}
           >
-            Send an<br />
-            invoice in<br />
-            three taps.
+            Get paid before<br />
+            the meeting ends.
           </h1>
           <p className="mt-6 text-lg text-mute max-w-md">
-            Pick client. Confirm amount. Send.<br />
-            No accounting bloat.
+            Invoice from your phone, on the call, in under 60 seconds. Your
+            client clicks a payment link from their inbox before they&apos;ve
+            stood up.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/signin"
               className="bg-ink text-paper px-7 py-3 rounded-md text-sm font-medium hover:bg-ink/90 transition-colors"
             >
-              Try it
+              Send your first invoice — free
             </Link>
             <a
               href="#how-it-works"
               className="border border-rule px-7 py-3 rounded-md text-sm font-medium flex items-center gap-2 hover:border-ink/40 transition-colors"
             >
               <Play size={14} />
-              See how it works
+              See it on your phone
             </a>
           </div>
+          <p className="mt-4 text-xs text-mute">
+            No card required for Send. Cancel anytime.
+          </p>
         </div>
 
         <div className="lg:justify-self-end w-full max-w-md mx-auto lg:mx-0">
@@ -103,8 +111,8 @@ function HowItWorks() {
     },
     {
       icon: FileText,
-      title: "Auto-send PDF invoices",
-      body: "We generate and email the invoice instantly.",
+      title: "Send PDF invoices in three taps",
+      body: "Pick client, confirm amount, send. Stripe link in the email.",
     },
   ];
 
@@ -136,102 +144,33 @@ function HowItWorks() {
   );
 }
 
-function Pricing() {
+function CloseCTA() {
   return (
-    <section
-      id="pricing"
-      className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-rule"
-    >
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-20">
+    <section className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-rule">
+      <div className="max-w-2xl mx-auto text-center">
         <h2
-          className="font-serif text-4xl sm:text-5xl leading-[1.05]"
+          className="font-serif text-3xl sm:text-4xl leading-tight"
           style={{ fontWeight: 400 }}
         >
-          Pricing
+          Stop chasing payments. Start receiving them.
         </h2>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <PricingCard
-            name="Free"
-            price="$0"
-            cadence="forever"
-            features={[
-              "3 invoices per month",
-              "PDF + email delivery",
-              "1 saved client",
-            ]}
-            cta="Start free"
-          />
-          <PricingCard
-            name="Pro"
-            price="$8"
-            cadence="per month"
-            features={[
-              "Unlimited invoices",
-              "Unlimited saved clients",
-              "Stripe payment links",
-            ]}
-            cta="Start Pro"
-            highlighted
-          />
+        <p className="text-sm text-mute mt-4 max-w-md mx-auto">
+          If your client doesn&apos;t open the invoice within 24 hours, the
+          next month of Pro is on us.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/signin"
+            className="bg-ink text-paper px-7 py-3 rounded-md text-sm font-medium hover:bg-ink/90 transition-colors"
+          >
+            Send your first invoice — free
+          </Link>
         </div>
+        <p className="mt-4 text-xs text-mute">
+          No card required for Send. Cancel anytime.
+        </p>
       </div>
     </section>
-  );
-}
-
-function PricingCard({
-  name,
-  price,
-  cadence,
-  features,
-  cta,
-  highlighted = false,
-}: {
-  name: string;
-  price: string;
-  cadence: string;
-  features: string[];
-  cta: string;
-  highlighted?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border p-6 flex flex-col ${
-        highlighted
-          ? "bg-ink text-paper border-ink"
-          : "bg-card border-rule text-ink"
-      }`}
-    >
-      <div className="text-sm font-medium">{name}</div>
-      <div className="mt-4 flex items-baseline gap-2">
-        <span className="font-mono text-4xl">{price}</span>
-        <span
-          className={`text-xs ${highlighted ? "text-paper/60" : "text-mute"}`}
-        >
-          {cadence}
-        </span>
-      </div>
-      <ul className="mt-6 space-y-2 flex-1">
-        {features.map((f) => (
-          <li
-            key={f}
-            className={`text-sm ${highlighted ? "text-paper/80" : "text-ink/80"}`}
-          >
-            {f}
-          </li>
-        ))}
-      </ul>
-      <Link
-        href="/signin"
-        className={`mt-6 text-sm font-medium px-4 py-2.5 rounded-md text-center transition-colors ${
-          highlighted
-            ? "bg-paper text-ink hover:bg-paper/90"
-            : "bg-ink text-paper hover:bg-ink/90"
-        }`}
-      >
-        {cta}
-      </Link>
-    </div>
   );
 }
 

@@ -6,17 +6,22 @@ import {
   createClient,
   createInvoice,
   deleteApiKey,
+  getBusiness,
   listApiKeys,
   markInvoicePaid,
   remindInvoice,
   setAutomationEnabled,
   setDefaultCurrency,
   setIntegrationConnected,
+  setTier,
   updateBusiness,
   updateClient,
+  voteForFeature,
 } from "@/lib/server/store";
 import { requireSession } from "@/lib/server/auth";
 import { isCurrencyCode } from "@/lib/currency";
+import { FEATURES, TIER_LABEL, type FeatureId } from "@/lib/features";
+import { TIER_RANK, type Tier } from "@/lib/types";
 import type {
   AutomationId,
   Business,
@@ -24,6 +29,25 @@ import type {
   DeliveryChannel,
   IntegrationId,
 } from "@/lib/types";
+
+const TIERS: ReadonlyArray<Tier> = ["send", "pro", "get-paid"];
+function isTier(v: unknown): v is Tier {
+  return typeof v === "string" && TIERS.includes(v as Tier);
+}
+function isFeatureId(v: unknown): v is FeatureId {
+  return typeof v === "string" && v in FEATURES;
+}
+
+async function requireFeature(uid: string, feature: FeatureId): Promise<void> {
+  const meta = FEATURES[feature];
+  const business = await getBusiness(uid);
+  if (TIER_RANK[business.tier] < TIER_RANK[meta.tier]) {
+    throw new Error(`${meta.name} is part of ${TIER_LABEL[meta.tier]}.`);
+  }
+  if (!meta.built) {
+    throw new Error(`${meta.name} isn't built yet — vote to prioritise.`);
+  }
+}
 
 const DELIVERY: ReadonlyArray<DeliveryChannel> = [
   "email",
@@ -47,6 +71,7 @@ function refreshAll() {
 export async function setDefaultCurrencyAction(code: CurrencyCode) {
   if (!isCurrencyCode(code)) throw new Error("Bad currency");
   const { uid } = await requireSession();
+  await requireFeature(uid, "multi-currency");
   const next = await setDefaultCurrency(uid, code);
   refreshAll();
   return next;
@@ -127,6 +152,17 @@ export async function createInvoiceAction(input: {
     throw new Error("Bad channel");
   }
   const { uid } = await requireSession();
+  const business = await getBusiness(uid);
+  if (input.currency && input.currency !== business.currency) {
+    await requireFeature(uid, "multi-currency");
+  }
+  if (
+    input.channelOverride &&
+    input.channelOverride !== "email" &&
+    input.channelOverride !== "portal"
+  ) {
+    await requireFeature(uid, "integrations");
+  }
   const inv = await createInvoice(uid, input);
   if (!inv) throw new Error("Client not found");
   refreshAll();
@@ -156,6 +192,7 @@ export async function connectIntegrationAction(
   account?: string
 ) {
   const { uid } = await requireSession();
+  await requireFeature(uid, "integrations");
   const next = await setIntegrationConnected(uid, id, true, account);
   if (!next) throw new Error("Unknown integration");
   refreshAll();
@@ -164,6 +201,7 @@ export async function connectIntegrationAction(
 
 export async function disconnectIntegrationAction(id: IntegrationId) {
   const { uid } = await requireSession();
+  await requireFeature(uid, "integrations");
   const next = await setIntegrationConnected(uid, id, false);
   if (!next) throw new Error("Unknown integration");
   refreshAll();
@@ -172,8 +210,17 @@ export async function disconnectIntegrationAction(id: IntegrationId) {
 
 // ---------- automations ----------
 
+const AUTOMATION_FEATURE: Record<AutomationId, FeatureId> = {
+  "auto-remind": "auto-reminders",
+  "auto-mark-paid": "auto-mark-paid",
+  "weekly-summary": "weekly-summary",
+  "agent-approval": "agent-approval",
+};
+
 export async function setAutomationAction(id: AutomationId, enabled: boolean) {
   const { uid } = await requireSession();
+  const feature = AUTOMATION_FEATURE[id];
+  if (feature) await requireFeature(uid, feature);
   const next = await setAutomationEnabled(uid, id, enabled);
   if (!next) throw new Error("Unknown automation");
   refreshAll();
@@ -185,6 +232,7 @@ export async function setAutomationAction(id: AutomationId, enabled: boolean) {
 export async function createApiKeyAction(name: string) {
   if (!name.trim()) throw new Error("Key name is required");
   const { uid } = await requireSession();
+  await requireFeature(uid, "agent-api");
   const created = await createApiKey(uid, name.trim());
   refreshAll();
   return created;
@@ -192,6 +240,7 @@ export async function createApiKeyAction(name: string) {
 
 export async function deleteApiKeyAction(id: string) {
   const { uid } = await requireSession();
+  await requireFeature(uid, "agent-api");
   const ok = await deleteApiKey(uid, id);
   if (!ok) throw new Error("Key not found");
   refreshAll();
@@ -201,4 +250,22 @@ export async function deleteApiKeyAction(id: string) {
 export async function listApiKeysAction() {
   const { uid } = await requireSession();
   return listApiKeys(uid);
+}
+
+// ---------- tier / features ----------
+
+export async function setTierAction(tier: Tier) {
+  if (!isTier(tier)) throw new Error("Bad tier");
+  const { uid } = await requireSession();
+  const next = await setTier(uid, tier);
+  refreshAll();
+  return next;
+}
+
+export async function voteForFeatureAction(id: FeatureId) {
+  if (!isFeatureId(id)) throw new Error("Unknown feature");
+  const { uid } = await requireSession();
+  const result = await voteForFeature(uid, id);
+  refreshAll();
+  return result;
 }

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { CURRENCIES, formatMoney, symbolFor } from "@/lib/currency";
 import { channelLabel } from "@/components/channel-icon";
+import { FeatureBadge, featureStatus } from "@/components/feature-lock";
 import type {
   Business,
   Client,
@@ -19,6 +20,7 @@ import type {
   DeliveryChannel,
   IntegrationId,
 } from "@/lib/types";
+import type { FeatureId } from "@/lib/features";
 import { createInvoiceAction } from "@/app/_actions";
 
 type Draft = {
@@ -35,11 +37,16 @@ export function NewInvoiceWizard({
   business,
   clients,
   connectedIntegrations,
+  featureVotes,
 }: {
   business: Business;
   clients: Client[];
   connectedIntegrations: IntegrationId[];
+  featureVotes: FeatureId[];
 }) {
+  const currencyUnlocked =
+    featureStatus("multi-currency", business.tier) === "allowed";
+  const currencyVoted = featureVotes.includes("multi-currency");
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [draft, setDraft] = useState<Draft>({
@@ -131,7 +138,10 @@ export function NewInvoiceWizard({
         <StepAmount
           draft={draft}
           setDraft={setDraft}
-          onPickCurrency={() => setShowCurrency(true)}
+          currencyUnlocked={currencyUnlocked}
+          currencyVoted={currencyVoted}
+          userTier={business.tier}
+          onPickCurrency={() => currencyUnlocked && setShowCurrency(true)}
           onNext={() => setStep(2)}
         />
       )}
@@ -215,11 +225,17 @@ function StepPickClient({
 function StepAmount({
   draft,
   setDraft,
+  currencyUnlocked,
+  currencyVoted,
+  userTier,
   onPickCurrency,
   onNext,
 }: {
   draft: Draft;
   setDraft: React.Dispatch<React.SetStateAction<Draft>>;
+  currencyUnlocked: boolean;
+  currencyVoted: boolean;
+  userTier: Business["tier"];
   onPickCurrency: () => void;
   onNext: () => void;
 }) {
@@ -262,15 +278,31 @@ function StepAmount({
         />
       </div>
 
-      <button
-        type="button"
-        onClick={onPickCurrency}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-rule text-sm hover:border-ink/30 transition-colors mb-10"
-      >
-        <Globe size={14} />
-        <span className="font-mono">{draft.currency}</span>
-        <span className="text-xs text-mute">· change</span>
-      </button>
+      <div className="flex items-center gap-2 mb-10">
+        <button
+          type="button"
+          onClick={onPickCurrency}
+          disabled={!currencyUnlocked}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-rule text-sm transition-colors disabled:cursor-not-allowed"
+          style={{
+            borderColor: "var(--color-rule)",
+            opacity: currencyUnlocked ? 1 : 0.6,
+          }}
+        >
+          <Globe size={14} />
+          <span className="font-mono">{draft.currency}</span>
+          {currencyUnlocked && (
+            <span className="text-xs text-mute">· change</span>
+          )}
+        </button>
+        {!currencyUnlocked && (
+          <FeatureBadge
+            feature="multi-currency"
+            userTier={userTier}
+            voted={currencyVoted}
+          />
+        )}
+      </div>
 
       <div className="text-xs uppercase tracking-widest text-mute mb-2">
         For

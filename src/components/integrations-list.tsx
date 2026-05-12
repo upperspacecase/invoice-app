@@ -9,8 +9,10 @@ import type { Integration } from "@/lib/types";
 
 export function IntegrationsList({
   integrations,
+  locked = false,
 }: {
   integrations: Integration[];
+  locked?: boolean;
 }) {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,14 @@ export function IntegrationsList({
                   : it.description}
               </div>
             </div>
-            {it.connected ? (
+            {locked ? (
+              <a
+                href="/app/settings/billing"
+                className="text-xs px-3.5 py-2 rounded-md bg-ink/[0.06] text-mute hover:bg-ink/10"
+              >
+                Upgrade to connect
+              </a>
+            ) : it.connected ? (
               <div className="relative">
                 <button
                   type="button"

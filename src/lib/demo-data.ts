@@ -14,6 +14,7 @@ export const initialBusiness: Business = {
   payment: "Wise — IBAN GB29 NWBK 6016 1331 9268 19",
   company: "Company No. 12345678",
   currency: "USD",
+  tier: "send",
 };
 
 export const initialClients: Client[] = [
@@ -242,4 +243,5 @@ export type {
   Integration,
   Invoice,
   InvoiceStatus,
+  Tier,
 } from "./types";

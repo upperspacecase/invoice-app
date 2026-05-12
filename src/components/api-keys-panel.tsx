@@ -5,7 +5,13 @@ import { Copy, Plus, Trash2 } from "lucide-react";
 import { createApiKeyAction, deleteApiKeyAction } from "@/app/_actions";
 import type { ApiKey } from "@/lib/types";
 
-export function ApiKeysPanel({ keys }: { keys: ApiKey[] }) {
+export function ApiKeysPanel({
+  keys,
+  locked = false,
+}: {
+  keys: ApiKey[];
+  locked?: boolean;
+}) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [revealed, setRevealed] = useState<{ id: string; token: string } | null>(
@@ -51,7 +57,7 @@ export function ApiKeysPanel({ keys }: { keys: ApiKey[] }) {
         <div className="text-xs uppercase tracking-widest text-mute">
           API keys
         </div>
-        {!creating && (
+        {!creating && !locked && (
           <button
             type="button"
             onClick={() => setCreating(true)}

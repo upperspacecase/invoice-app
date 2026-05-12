@@ -13,7 +13,9 @@ import type {
   DeliveryChannel,
   IntegrationId,
   Invoice,
+  Tier,
 } from "../types";
+import type { FeatureId } from "../features";
 import {
   formatLabel,
   initialActivity,
@@ -135,17 +137,38 @@ export async function logActivity(
 
 // ---------- business / profile ----------
 
-async function getBusiness(uid: string): Promise<Business> {
+export async function getBusiness(uid: string): Promise<Business> {
   const ref = userDoc(uid).collection("meta").doc(PROFILE_DOC);
   const snap = await ref.get();
-  const data = snap.exists ? (snap.data() as Business) : initialBusiness;
+  const data = snap.exists ? (snap.data() as Partial<Business>) : initialBusiness;
   return {
-    name: data.name,
-    email: data.email,
-    payment: data.payment,
-    company: data.company,
-    currency: data.currency,
+    name: data.name ?? initialBusiness.name,
+    email: data.email ?? initialBusiness.email,
+    payment: data.payment ?? initialBusiness.payment,
+    company: data.company ?? initialBusiness.company,
+    currency: data.currency ?? initialBusiness.currency,
+    tier: data.tier ?? "send",
+    brandColor:
+      typeof data.brandColor === "string" ? data.brandColor : undefined,
+    logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : undefined,
   };
+}
+
+export async function setTier(uid: string, tier: Tier): Promise<Business> {
+  const current = await getBusiness(uid);
+  if (current.tier === tier) return current;
+  await userDoc(uid).collection("meta").doc(PROFILE_DOC).set({ tier }, { merge: true });
+  await pushActivity(
+    uid,
+    "you",
+    tier === "send"
+      ? "Switched to Send (free)"
+      : tier === "pro"
+      ? "Upgraded to Pro"
+      : "Upgraded to Get Paid",
+    "billing.demo"
+  );
+  return { ...current, tier };
 }
 
 export async function updateBusiness(
@@ -580,6 +603,34 @@ export async function touchApiKey(id: string): Promise<void> {
   );
 }
 
+// ---------- feature votes ----------
+
+function votesCol(uid: string) {
+  return userDoc(uid).collection("featureVotes");
+}
+
+export async function voteForFeature(
+  uid: string,
+  id: FeatureId
+): Promise<{ alreadyVoted: boolean }> {
+  const ref = votesCol(uid).doc(id);
+  const snap = await ref.get();
+  if (snap.exists) return { alreadyVoted: true };
+  await ref.set({ at: FieldValue.serverTimestamp() });
+  await pushActivity(
+    uid,
+    "you",
+    `Voted to prioritise "${id}"`,
+    "features.vote"
+  );
+  return { alreadyVoted: false };
+}
+
+export async function listFeatureVotes(uid: string): Promise<FeatureId[]> {
+  const snap = await votesCol(uid).get();
+  return snap.docs.map((d) => d.id as FeatureId);
+}
+
 // ---------- activity ----------
 
 export async function listActivity(
@@ -610,6 +661,7 @@ export async function getWorkspace(uid: string) {
     automations,
     apiKeys,
     activity,
+    featureVotes,
   ] = await Promise.all([
     getBusiness(uid),
     listClients(uid),
@@ -618,6 +670,7 @@ export async function getWorkspace(uid: string) {
     listAutomations(uid),
     listApiKeys(uid),
     listActivity(uid),
+    listFeatureVotes(uid),
   ]);
   return {
     business,
@@ -627,5 +680,6 @@ export async function getWorkspace(uid: string) {
     automations,
     apiKeys,
     activity,
+    featureVotes,
   };
 }

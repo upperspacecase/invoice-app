@@ -53,9 +53,9 @@ export const FEATURES: Record<FeatureId, FeatureMeta> = {
   "branded-invoice": {
     id: "branded-invoice",
     name: "Branded invoice",
-    description: "Logo + brand color on PDF. Trust signal for bigger clients.",
+    description: "Brand color on PDF today; logo upload coming soon.",
     tier: "pro",
-    built: false,
+    built: true,
   },
   "auto-reminders": {
     id: "auto-reminders",

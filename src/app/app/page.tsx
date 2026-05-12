@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import {
   listAutomations,
   listInvoices,
@@ -12,7 +12,7 @@ import { channelLabel, ChannelIcon } from "@/components/channel-icon";
 import type { CurrencyCode, Invoice } from "@/lib/types";
 
 export default async function LedgerPage() {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const [{ business, invoices }, automations, rates] = await Promise.all([
     getWorkspace(uid),
     listAutomations(uid),
@@ -109,7 +109,7 @@ export default async function LedgerPage() {
                 {formatMoney(inv.amount, inv.currency)}
               </div>
               <div
-                className="text-[10px] uppercase tracking-widest mt-0.5"
+                className="text-[10px] uppercase tracking-widest mt-0.5 flex items-center gap-2 justify-end"
                 style={{
                   color:
                     inv.status === "paid"
@@ -118,6 +118,15 @@ export default async function LedgerPage() {
                 }}
               >
                 {inv.status}
+                <a
+                  href={`/api/v1/invoices/${inv.id}/pdf`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[10px] uppercase tracking-widest text-mute hover:text-ink"
+                  aria-label={`View ${inv.id} PDF`}
+                >
+                  PDF
+                </a>
               </div>
             </div>
           </li>

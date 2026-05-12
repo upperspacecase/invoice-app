@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { FileText, Bot } from "lucide-react";
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import { getWorkspace } from "@/lib/server/store";
 import { ApiKeysPanel } from "@/components/api-keys-panel";
 import { TIER_LABEL, FEATURES } from "@/lib/features";
 import { TIER_RANK } from "@/lib/types";
 
 export default async function SettingsDevelopersPage() {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const { business, apiKeys } = await getWorkspace(uid);
   const meta = FEATURES["agent-api"];
   const inPlan = TIER_RANK[business.tier] >= TIER_RANK[meta.tier];

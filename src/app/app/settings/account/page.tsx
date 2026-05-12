@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { User } from "lucide-react";
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import { getWorkspace } from "@/lib/server/store";
 import { BusinessFields } from "@/components/business-fields";
 import { CurrencyDefaultPicker } from "@/components/currency-default-picker";
-import { FeatureBadge, FeatureLock } from "@/components/feature-lock";
+import { FeatureBadge, FeatureLock, featureStatus } from "@/components/feature-lock";
 import { FEATURES } from "@/lib/features";
+import { BrandColorPicker } from "@/components/brand-color-picker";
 
 export default async function SettingsAccountPage() {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const { business, clients, featureVotes } = await getWorkspace(uid);
   const voted = (id: keyof typeof FEATURES) => featureVotes.includes(id);
 
@@ -47,9 +48,13 @@ export default async function SettingsAccountPage() {
           voted={voted("branded-invoice")}
         />
       </div>
-      <div className="rounded-xl border border-rule p-4 bg-card text-sm text-mute">
-        Logo and brand color on every PDF. Trust signal for bigger clients.
-      </div>
+      <BrandColorPicker
+        current={business.brandColor}
+        disabled={featureStatus("branded-invoice", business.tier) !== "allowed"}
+      />
+      <p className="text-[11px] text-mute mt-2">
+        Logo upload coming soon — click the badge above to vote.
+      </p>
 
       <div className="flex items-center justify-between mt-10 mb-4">
         <div className="text-xs uppercase tracking-widest text-mute">

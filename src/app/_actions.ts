@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import {
   createApiKey,
   createClient,
-  createInvoice,
   deleteApiKey,
   getBusiness,
   listApiKeys,
+  listClients,
+  listInvoices,
   markInvoicePaid,
-  remindInvoice,
   setAutomationEnabled,
   setDefaultCurrency,
   setIntegrationConnected,
@@ -18,6 +18,7 @@ import {
   updateClient,
   voteForFeature,
 } from "@/lib/server/store";
+import { sendInvoice, sendInvoiceReminder } from "@/lib/server/dispatch";
 import { requireSession } from "@/lib/server/auth";
 import { isCurrencyCode } from "@/lib/currency";
 import { FEATURES, TIER_LABEL, type FeatureId } from "@/lib/features";
@@ -46,6 +47,34 @@ async function requireFeature(uid: string, feature: FeatureId): Promise<void> {
   }
   if (!meta.built) {
     throw new Error(`${meta.name} isn't built yet — vote to prioritise.`);
+  }
+}
+
+const LIMITS = {
+  send: { clients: 1, invoicesPerMonth: 3 },
+} as const;
+
+async function requireWithinClientLimit(uid: string): Promise<void> {
+  const business = await getBusiness(uid);
+  if (business.tier !== "send") return;
+  const clients = await listClients(uid);
+  if (clients.length >= LIMITS.send.clients) {
+    throw new Error(
+      `Send tier is limited to ${LIMITS.send.clients} saved client. Upgrade to add more.`
+    );
+  }
+}
+
+async function requireWithinInvoiceLimit(uid: string): Promise<void> {
+  const business = await getBusiness(uid);
+  if (business.tier !== "send") return;
+  const invoices = await listInvoices(uid);
+  const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recent = invoices.filter((inv) => inv.sentAt >= monthAgo);
+  if (recent.length >= LIMITS.send.invoicesPerMonth) {
+    throw new Error(
+      `Send tier is limited to ${LIMITS.send.invoicesPerMonth} invoices per month. Upgrade for unlimited.`
+    );
   }
 }
 
@@ -105,6 +134,7 @@ export async function createClientAction(input: {
     throw new Error("Bad delivery");
   }
   const { uid } = await requireSession();
+  await requireWithinClientLimit(uid);
   const client = await createClient(uid, input);
   refreshAll();
   return client;
@@ -163,7 +193,8 @@ export async function createInvoiceAction(input: {
   ) {
     await requireFeature(uid, "integrations");
   }
-  const inv = await createInvoice(uid, input);
+  await requireWithinInvoiceLimit(uid);
+  const inv = await sendInvoice(uid, input);
   if (!inv) throw new Error("Client not found");
   refreshAll();
   return inv;
@@ -179,7 +210,7 @@ export async function markInvoicePaidAction(id: string) {
 
 export async function remindInvoiceAction(id: string) {
   const { uid } = await requireSession();
-  const inv = await remindInvoice(uid, id, "you");
+  const inv = await sendInvoiceReminder(uid, id, "you");
   if (!inv) throw new Error("Invoice not found");
   refreshAll();
   return inv;
@@ -268,4 +299,45 @@ export async function voteForFeatureAction(id: FeatureId) {
   const result = await voteForFeature(uid, id);
   refreshAll();
   return result;
+}
+
+// ---------- stripe ----------
+
+export async function startStripeConnectAction(): Promise<
+  { ok: true; url: string } | { ok: false; reason: string }
+> {
+  const session = await requireSession();
+  const business = await getBusiness(session.uid);
+  const { startConnectFlow } = await import("@/lib/stripe/connect");
+  const flow = await startConnectFlow({
+    uid: session.uid,
+    email: business.email,
+    businessName: business.name,
+    existingAccountId: business.stripeAccountId,
+  });
+  if (!flow.ok) return { ok: false, reason: flow.detail };
+  if (!business.stripeAccountId) {
+    await updateBusiness(session.uid, { stripeAccountId: flow.accountId });
+  }
+  return { ok: true, url: flow.onboardingUrl };
+}
+
+export async function startUpgradeCheckoutAction(
+  tier: Tier
+): Promise<{ ok: true; url: string } | { ok: false; reason: string }> {
+  if (!isTier(tier)) return { ok: false, reason: "Bad tier" };
+  if (tier === "send") return { ok: false, reason: "Send is free" };
+  const session = await requireSession();
+  const business = await getBusiness(session.uid);
+  const { createSubscriptionCheckout } = await import(
+    "@/lib/stripe/checkout"
+  );
+  const result = await createSubscriptionCheckout({
+    uid: session.uid,
+    email: business.email,
+    tier,
+    existingCustomerId: business.stripeCustomerId,
+  });
+  if (!result.ok) return { ok: false, reason: result.detail };
+  return { ok: true, url: result.url };
 }

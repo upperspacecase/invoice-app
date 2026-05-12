@@ -1,9 +1,9 @@
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import { getWorkspace } from "@/lib/server/store";
 import { AutomationsList } from "@/components/automations-list";
 
 export default async function SettingsAutomationsPage() {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const { business, automations, featureVotes } = await getWorkspace(uid);
   return (
     <div>

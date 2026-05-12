@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { setTierAction } from "@/app/_actions";
+import {
+  setTierAction,
+  startStripeConnectAction,
+  startUpgradeCheckoutAction,
+} from "@/app/_actions";
 import { TIER_RANK } from "@/lib/types";
 import type { Tier } from "@/lib/types";
 
@@ -40,7 +44,7 @@ const PLANS: Plan[] = [
     highlights: [
       "Unlimited invoices and clients",
       "Multi-currency with live FX",
-      "Stripe payment links (coming soon)",
+      "Stripe payment links",
       "Branded invoice — logo + color (coming soon)",
       "Client integrations (QuickBooks, Xero, Slack)",
       "Agent API",
@@ -66,9 +70,17 @@ const PLANS: Plan[] = [
   },
 ];
 
-export function BillingPlans({ current }: { current: Tier }) {
+export function BillingPlans({
+  current,
+  stripeAccountId,
+}: {
+  current: Tier;
+  stripeAccountId?: string;
+}) {
   const [annual, setAnnual] = useState(true);
-  const [pendingId, setPendingId] = useState<Tier | null>(null);
+  const [pendingId, setPendingId] = useState<Tier | "stripe-connect" | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -78,9 +90,38 @@ export function BillingPlans({ current }: { current: Tier }) {
     setPendingId(tier);
     startTransition(async () => {
       try {
-        await setTierAction(tier);
+        if (tier !== "send") {
+          const result = await startUpgradeCheckoutAction(tier);
+          if (result.ok) {
+            window.location.href = result.url;
+            return;
+          }
+          // No Stripe configured — fall back to demo tier switch.
+          await setTierAction(tier);
+        } else {
+          await setTierAction("send");
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not switch plan.");
+      } finally {
+        setPendingId(null);
+      }
+    });
+  }
+
+  function connectStripe() {
+    setError(null);
+    setPendingId("stripe-connect");
+    startTransition(async () => {
+      try {
+        const result = await startStripeConnectAction();
+        if (result.ok) {
+          window.location.href = result.url;
+        } else {
+          setError(result.reason);
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Could not start Connect.");
       } finally {
         setPendingId(null);
       }
@@ -221,7 +262,7 @@ export function BillingPlans({ current }: { current: Tier }) {
                   opacity: busy ? 0.5 : 1,
                 }}
               >
-                {busy ? "Switching…" : cta}
+                {busy ? "Loading…" : cta}
               </button>
 
               {plan.guarantee && (
@@ -234,9 +275,43 @@ export function BillingPlans({ current }: { current: Tier }) {
         })}
       </div>
 
+      <div className="text-xs uppercase tracking-widest text-mute mt-10 mb-3">
+        Receive payments
+      </div>
+      <div className="rounded-xl border border-rule p-4 flex items-center gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium">Stripe account</div>
+          <div className="text-xs text-mute mt-0.5">
+            {stripeAccountId
+              ? `Connected · ${stripeAccountId}`
+              : "Connect your Stripe to attach a payment link to every invoice. Money lands in your bank, not ours."}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={connectStripe}
+          disabled={pendingId === "stripe-connect"}
+          className="h-9 px-4 rounded-md text-xs font-medium transition-colors"
+          style={{
+            background: stripeAccountId
+              ? "rgba(10,10,10,0.06)"
+              : "var(--color-ink)",
+            color: stripeAccountId ? "var(--color-ink)" : "var(--color-paper)",
+            opacity: pendingId === "stripe-connect" ? 0.5 : 1,
+          }}
+        >
+          {pendingId === "stripe-connect"
+            ? "Loading…"
+            : stripeAccountId
+            ? "Manage in Stripe"
+            : "Connect Stripe"}
+        </button>
+      </div>
+
       <p className="text-[11px] text-mute mt-6 leading-relaxed">
-        Demo billing — clicking switches your tier directly. Real Stripe
-        Checkout lands with the payment-links work in PLAN.md.
+        Stripe Checkout + Stripe Connect activate when Stripe keys are
+        configured. Without keys the tier switch is a demo — useful for
+        previewing the gated UI.
       </p>
     </div>
   );

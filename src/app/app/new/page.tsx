@@ -1,9 +1,9 @@
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import { getWorkspace } from "@/lib/server/store";
 import { NewInvoiceWizard } from "@/components/new-invoice-wizard";
 
 export default async function NewInvoicePage() {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const { business, clients, integrations, featureVotes } = await getWorkspace(
     uid
   );

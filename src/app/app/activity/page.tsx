@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Bell, Bot, User } from "lucide-react";
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import { listActivity } from "@/lib/server/store";
 import type { ActivityActor } from "@/lib/types";
 
@@ -17,7 +17,7 @@ const BG: Record<ActivityActor, string> = {
 };
 
 export default async function ActivityPage() {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const events = await listActivity(uid, 60);
 
   return (

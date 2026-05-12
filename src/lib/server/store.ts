@@ -73,6 +73,7 @@ export async function ensureUserSeeded(
     ...initialBusiness,
     name: hint.displayName?.trim() || initialBusiness.name,
     email: hint.email || initialBusiness.email,
+    onboarded: false,
   };
   const batch = adminDb().batch();
   batch.set(profileRef, { ...business, createdAt: FieldValue.serverTimestamp() });
@@ -151,6 +152,15 @@ export async function getBusiness(uid: string): Promise<Business> {
     brandColor:
       typeof data.brandColor === "string" ? data.brandColor : undefined,
     logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : undefined,
+    onboarded: data.onboarded ?? true,
+    stripeAccountId:
+      typeof data.stripeAccountId === "string" ? data.stripeAccountId : undefined,
+    stripeCustomerId:
+      typeof data.stripeCustomerId === "string" ? data.stripeCustomerId : undefined,
+    stripeSubscriptionId:
+      typeof data.stripeSubscriptionId === "string"
+        ? data.stripeSubscriptionId
+        : undefined,
   };
 }
 
@@ -302,7 +312,29 @@ function normaliseInvoice(id: string, data: Record<string, unknown>): Invoice {
     lastReminderAt: data.lastReminderAt
       ? fromTimestamp(data.lastReminderAt)
       : undefined,
+    paymentLinkUrl:
+      typeof data.paymentLinkUrl === "string" ? data.paymentLinkUrl : undefined,
+    stripePaymentLinkId:
+      typeof data.stripePaymentLinkId === "string"
+        ? data.stripePaymentLinkId
+        : undefined,
   };
+}
+
+export async function updateInvoice(
+  uid: string,
+  id: string,
+  patch: Partial<Omit<Invoice, "id">>
+): Promise<Invoice | null> {
+  const ref = invoicesCol(uid).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const clean: Record<string, unknown> = { ...patch };
+  if (patch.paymentLinkUrl === undefined) delete clean.paymentLinkUrl;
+  if (patch.stripePaymentLinkId === undefined) delete clean.stripePaymentLinkId;
+  await ref.set(clean, { merge: true });
+  const after = await ref.get();
+  return normaliseInvoice(after.id, after.data() ?? {});
 }
 
 export async function listInvoices(uid: string): Promise<Invoice[]> {
@@ -651,6 +683,20 @@ export async function listActivity(
 }
 
 // ---------- aggregate ----------
+
+export async function listAllUserIds(): Promise<string[]> {
+  const refs = await adminDb().collection("users").listDocuments();
+  return refs.map((r) => r.id);
+}
+
+export async function getAutomation(
+  uid: string,
+  id: AutomationId
+): Promise<{ enabled: boolean } | null> {
+  const snap = await automationsCol(uid).doc(id).get();
+  if (!snap.exists) return null;
+  return { enabled: Boolean(snap.data()?.enabled) };
+}
 
 export async function getWorkspace(uid: string) {
   const [

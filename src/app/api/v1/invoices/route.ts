@@ -1,5 +1,6 @@
 import { apiAuthError, authenticateApi } from "@/lib/server/auth";
-import { createInvoice, listInvoices } from "@/lib/server/store";
+import { listInvoices } from "@/lib/server/store";
+import { sendInvoice } from "@/lib/server/dispatch";
 import { isCurrencyCode } from "@/lib/currency";
 import type { CurrencyCode, DeliveryChannel, InvoiceStatus } from "@/lib/types";
 
@@ -78,7 +79,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Bad channel." }, { status: 400 });
   }
 
-  const inv = await createInvoice(auth.uid, {
+  const inv = await sendInvoice(auth.uid, {
     clientId: b.clientId,
     amount,
     description:

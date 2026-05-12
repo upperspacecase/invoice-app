@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import {
   adminAuth,
   SESSION_COOKIE_NAME,
@@ -7,6 +8,7 @@ import {
 import {
   ensureUserSeeded,
   findApiKeyByToken,
+  getBusiness,
   touchApiKey,
 } from "./store";
 
@@ -86,4 +88,29 @@ export async function requireSession(): Promise<SessionUser> {
   if (!user) throw new UnauthorizedError();
   await ensureUserSeeded(user.uid, { email: user.email, displayName: user.name });
   return user;
+}
+
+export async function requireOnboardedSession(): Promise<SessionUser> {
+  const user = await requireSession();
+  const business = await getBusiness(user.uid);
+  if (!business.onboarded) {
+    redirect("/app/onboarding");
+  }
+  return user;
+}
+
+export type EitherAuthOk = { ok: true; uid: string };
+export type EitherAuthErr = ApiAuthErr;
+export async function authenticateEither(
+  req: Request
+): Promise<EitherAuthOk | EitherAuthErr> {
+  const bearer = req.headers.get("authorization");
+  if (bearer) {
+    const api = await authenticateApi(req);
+    if (api.ok) return { ok: true, uid: api.uid };
+    return api;
+  }
+  const session = await getSessionUser();
+  if (session) return { ok: true, uid: session.uid };
+  return { ok: false, status: 401, message: "Sign in or supply a bearer token." };
 }

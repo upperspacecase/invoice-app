@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import { getWorkspace } from "@/lib/server/store";
 import { IntegrationsList } from "@/components/integrations-list";
 import { TIER_LABEL, FEATURES } from "@/lib/features";
 import { TIER_RANK } from "@/lib/types";
 
 export default async function SettingsIntegrationsPage() {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const { business, integrations } = await getWorkspace(uid);
   const meta = FEATURES.integrations;
   const inPlan = TIER_RANK[business.tier] >= TIER_RANK[meta.tier];

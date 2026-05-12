@@ -31,6 +31,10 @@ export type Business = {
   tier: Tier;
   brandColor?: string;
   logoUrl?: string;
+  onboarded: boolean;
+  stripeAccountId?: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
 };
 
 export type Client = {
@@ -59,6 +63,8 @@ export type Invoice = {
   sentAt: number;
   paidAt?: number;
   lastReminderAt?: number;
+  paymentLinkUrl?: string;
+  stripePaymentLinkId?: string;
 };
 
 export type IntegrationId =

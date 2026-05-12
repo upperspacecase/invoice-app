@@ -59,6 +59,7 @@ export function NewInvoiceWizard({
   const [showCurrency, setShowCurrency] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [sentInvoiceId, setSentInvoiceId] = useState<string | null>(null);
 
   function handleBack() {
     if (step === 0 || step === 3) {
@@ -86,13 +87,14 @@ export function NewInvoiceWizard({
     setError(null);
     startTransition(async () => {
       try {
-        await createInvoiceAction({
+        const inv = await createInvoiceAction({
           clientId: draft.client!.id,
           amount,
           description: draft.description || "Services rendered",
           currency: draft.currency,
           channelOverride: draft.channelOverride ?? undefined,
         });
+        setSentInvoiceId(inv.id);
         setStep(3);
         router.refresh();
       } catch (e) {
@@ -165,6 +167,7 @@ export function NewInvoiceWizard({
           clientName={draft.client.name}
           channel={effectiveChannel ?? "email"}
           deliveryHandle={draft.client.deliveryHandle}
+          invoiceId={sentInvoiceId}
           onDone={() => router.push("/app")}
         />
       )}
@@ -526,6 +529,7 @@ function StepSent({
   clientName,
   channel,
   deliveryHandle,
+  invoiceId,
   onDone,
 }: {
   amount: number;
@@ -533,6 +537,7 @@ function StepSent({
   clientName: string;
   channel: DeliveryChannel;
   deliveryHandle?: string;
+  invoiceId: string | null;
   onDone: () => void;
 }) {
   const message =
@@ -554,13 +559,25 @@ function StepSent({
         Sent.
       </h1>
       <p className="text-sm text-mute mt-3 mb-10 max-w-xs">{message}</p>
-      <button
-        type="button"
-        onClick={onDone}
-        className="px-7 py-3 rounded-md bg-ink/[0.06] text-sm hover:bg-ink/10 transition-colors"
-      >
-        Done
-      </button>
+      <div className="flex items-center gap-3">
+        {invoiceId && (
+          <a
+            href={`/api/v1/invoices/${invoiceId}/pdf`}
+            target="_blank"
+            rel="noreferrer"
+            className="px-5 py-2.5 rounded-md border border-rule text-sm hover:border-ink/40"
+          >
+            View PDF
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={onDone}
+          className="px-5 py-2.5 rounded-md bg-ink/[0.06] text-sm hover:bg-ink/10 transition-colors"
+        >
+          Done
+        </button>
+      </div>
     </div>
   );
 }

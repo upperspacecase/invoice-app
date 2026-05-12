@@ -15,6 +15,7 @@ export const initialBusiness: Business = {
   company: "Company No. 12345678",
   currency: "USD",
   tier: "send",
+  onboarded: true,
 };
 
 export const initialClients: Client[] = [

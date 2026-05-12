@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireSession } from "@/lib/server/auth";
+import { requireOnboardedSession } from "@/lib/server/auth";
 import { getClient, listIntegrations } from "@/lib/server/store";
 import { ClientEditForm } from "@/components/client-edit-form";
 
@@ -8,7 +8,7 @@ export default async function ClientPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { uid } = await requireSession();
+  const { uid } = await requireOnboardedSession();
   const { id } = await params;
   const [client, integrations] = await Promise.all([
     getClient(uid, id),

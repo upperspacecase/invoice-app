@@ -15,6 +15,8 @@ export async function GET() {
         "Send a reminder for an unpaid invoice.",
       "POST /api/v1/invoices/{id}/paid":
         "Mark an invoice as paid.",
+      "GET /api/v1/invoices/{id}/pdf":
+        "Returns the invoice as application/pdf.",
       "GET /api/v1/fx":
         "Current FX rates (base: USD). Sourced from exchangerate.host with daily cache.",
     },

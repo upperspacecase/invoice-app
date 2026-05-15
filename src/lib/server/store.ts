@@ -152,7 +152,10 @@ export async function getBusiness(uid: string): Promise<Business> {
     brandColor:
       typeof data.brandColor === "string" ? data.brandColor : undefined,
     logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : undefined,
-    onboarded: data.onboarded ?? true,
+    // Default false so pre-existing accounts (signed up before this field
+    // existed) get prompted on next visit. ensureUserSeeded explicitly sets
+    // false for new accounts.
+    onboarded: data.onboarded ?? false,
     stripeAccountId:
       typeof data.stripeAccountId === "string" ? data.stripeAccountId : undefined,
     stripeCustomerId:

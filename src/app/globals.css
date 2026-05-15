@@ -9,6 +9,17 @@
   --color-accent: #c44e2c;
   --color-paid: #2d7a4f;
 
+  --color-cream: #fdf8ef;
+  --color-cream-deep: #f7eed8;
+  --color-coral: #ff6b4a;
+  --color-coral-soft: #ffa389;
+  --color-coral-deep: #e85a3a;
+  --color-sun: #fde68a;
+  --color-mint: #bef0d0;
+  --color-sky: #cfe4ff;
+  --color-iris: #e9d8fd;
+  --color-blush: #fde0d8;
+
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;

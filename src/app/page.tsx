@@ -1,21 +1,54 @@
 import Link from "next/link";
-import { Play, User, Users, FileText } from "lucide-react";
-import { HeroCard } from "@/components/hero-card";
+import { Play } from "lucide-react";
+import { HeroIllustration } from "@/components/landing/hero-illustration";
+import { FeatureCards } from "@/components/landing/feature-cards";
+import { SocialProof } from "@/components/landing/social-proof";
+import { ClosingCTA } from "@/components/landing/closing-cta";
 import { PricingBlock } from "@/components/pricing-block";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "var(--color-cream)" }}
+    >
       <Nav />
-
       <main className="flex-1">
         <Hero />
-        <HowItWorks />
+        <FeatureCards />
+        <SocialProof />
         <PricingBlock />
-        <CloseCTA />
+        <ClosingCTA />
       </main>
-
       <Footer />
+    </div>
+  );
+}
+
+function Wordmark() {
+  return (
+    <div className="flex items-center gap-1">
+      <span
+        className="font-serif text-2xl tracking-tight"
+        style={{ fontWeight: 700, letterSpacing: "-0.02em" }}
+      >
+        invoice-app
+      </span>
+      <svg
+        aria-hidden
+        width="14"
+        height="14"
+        viewBox="0 0 14 14"
+        style={{ marginTop: "-12px" }}
+      >
+        <g stroke="var(--color-coral)" strokeWidth="1.6" strokeLinecap="round">
+          <line x1="7" y1="2" x2="7" y2="6" />
+          <line x1="11" y1="4" x2="9" y2="6.5" />
+          <line x1="3" y1="4" x2="5" y2="6.5" />
+          <line x1="12" y1="8" x2="10" y2="8" />
+          <line x1="2" y1="8" x2="4" y2="8" />
+        </g>
+      </svg>
     </div>
   );
 }
@@ -24,27 +57,25 @@ function Nav() {
   return (
     <header className="px-6 sm:px-10 lg:px-14 pt-6">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-sm font-mono tracking-tight text-ink"
-        >
-          invoice-app
+        <Link href="/" aria-label="invoice-app home">
+          <Wordmark />
         </Link>
-        <nav className="flex items-center gap-6 sm:gap-8">
-          <a href="#how-it-works" className="text-sm hidden sm:inline">
+        <nav className="flex items-center gap-5 sm:gap-7 text-sm">
+          <a href="#how-it-works" className="hidden sm:inline">
             How it works
           </a>
-          <a href="#pricing" className="text-sm hidden sm:inline">
+          <a href="#pricing" className="hidden sm:inline">
             Pricing
           </a>
-          <Link href="/signin" className="text-sm hidden sm:inline">
-            Sign in
+          <Link href="/signin" className="hidden sm:inline">
+            Log in
           </Link>
           <Link
             href="/signin"
-            className="text-sm bg-ink text-paper px-4 py-2 rounded-md hover:bg-ink/90 transition-colors"
+            className="px-4 sm:px-5 h-10 inline-flex items-center justify-center rounded-full text-paper text-sm font-semibold"
+            style={{ background: "var(--color-coral)" }}
           >
-            Send your first invoice — free
+            Start free
           </Link>
         </nav>
       </div>
@@ -54,129 +85,128 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="px-6 sm:px-10 lg:px-14 pt-16 sm:pt-20 pb-20 sm:pb-28">
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center">
-        <div>
+    <section
+      id="how-it-works"
+      className="px-6 sm:px-10 lg:px-14 pt-12 sm:pt-16 lg:pt-20 pb-16 sm:pb-20"
+    >
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-20 items-start">
+        <div className="lg:pt-6">
           <h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl leading-[1.02] tracking-tight"
-            style={{ fontWeight: 400 }}
+            className="font-serif tracking-tight leading-[1.02]"
+            style={{
+              fontWeight: 700,
+              fontSize: "clamp(2.5rem, 6vw, 4.25rem)",
+              letterSpacing: "-0.02em",
+            }}
           >
-            Get paid before<br />
-            the meeting ends.
+            Invoice once.<br />
+            Stop{" "}
+            <span className="relative inline-block">
+              chasing
+              <UnderlineDoodle />
+            </span>
+            .
           </h1>
-          <p className="mt-6 text-lg text-mute max-w-md">
-            Invoice from your phone, on the call, in under 60 seconds. Your
-            client clicks a payment link from their inbox before they&apos;ve
-            stood up.
+          <p className="mt-6 text-base sm:text-lg text-mute max-w-md leading-relaxed">
+            Send a clean invoice in seconds. Automatic reminders follow up
+            until it&apos;s paid.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/signin"
-              className="bg-ink text-paper px-7 py-3 rounded-md text-sm font-medium hover:bg-ink/90 transition-colors"
+              className="px-6 h-12 inline-flex items-center justify-center rounded-full text-paper text-sm font-semibold transition-colors"
+              style={{ background: "var(--color-coral)" }}
             >
-              Send your first invoice — free
+              Start free
             </Link>
             <a
               href="#how-it-works"
-              className="border border-rule px-7 py-3 rounded-md text-sm font-medium flex items-center gap-2 hover:border-ink/40 transition-colors"
+              className="h-12 px-5 inline-flex items-center gap-2 rounded-full text-sm font-medium bg-white"
+              style={{ border: "1.5px solid rgba(10,10,10,0.1)" }}
             >
-              <Play size={14} />
-              See it on your phone
+              <span
+                className="w-6 h-6 rounded-full flex items-center justify-center text-paper"
+                style={{ background: "var(--color-ink)" }}
+                aria-hidden
+              >
+                <Play size={11} fill="currentColor" />
+              </span>
+              See how it works
             </a>
           </div>
-          <p className="mt-4 text-xs text-mute">
-            No card required for Send. Cancel anytime.
-          </p>
+          <div className="mt-4 flex items-center gap-2">
+            <ArrowDoodle />
+            <span
+              className="text-xs italic"
+              style={{ color: "var(--color-coral-deep)" }}
+            >
+              No credit card required
+            </span>
+          </div>
         </div>
 
-        <div className="lg:justify-self-end w-full max-w-md mx-auto lg:mx-0">
-          <HeroCard />
-        </div>
+        <HeroIllustration />
       </div>
     </section>
   );
 }
 
-function HowItWorks() {
-  const items = [
-    {
-      icon: User,
-      title: "Set your details once",
-      body: "Add your business info and payment details.",
-    },
-    {
-      icon: Users,
-      title: "Save clients as you go",
-      body: "Create a client once. Use them forever.",
-    },
-    {
-      icon: FileText,
-      title: "Send PDF invoices in three taps",
-      body: "Pick client, confirm amount, send. Stripe link in the email.",
-    },
-  ];
-
+function UnderlineDoodle() {
   return (
-    <section
-      id="how-it-works"
-      className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-rule"
+    <svg
+      aria-hidden
+      width="100%"
+      height="14"
+      viewBox="0 0 240 14"
+      preserveAspectRatio="none"
+      className="absolute left-0 right-0"
+      style={{ bottom: -6 }}
     >
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-20">
-        <h2
-          className="font-serif text-4xl sm:text-5xl leading-[1.05]"
-          style={{ fontWeight: 400 }}
-        >
-          What it does
-        </h2>
-        <div className="grid sm:grid-cols-3 gap-8 sm:gap-10">
-          {items.map(({ icon: Icon, title, body }) => (
-            <div key={title}>
-              <div className="w-10 h-10 rounded-full border border-rule flex items-center justify-center mb-5">
-                <Icon size={18} strokeWidth={1.5} />
-              </div>
-              <div className="text-sm font-medium mb-2">{title}</div>
-              <div className="text-sm text-mute leading-relaxed">{body}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+      <path
+        d="M 4 9 Q 60 1, 120 6 T 236 7"
+        stroke="var(--color-coral)"
+        strokeWidth="4"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
   );
 }
 
-function CloseCTA() {
+function ArrowDoodle() {
   return (
-    <section className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-rule">
-      <div className="max-w-2xl mx-auto text-center">
-        <h2
-          className="font-serif text-3xl sm:text-4xl leading-tight"
-          style={{ fontWeight: 400 }}
-        >
-          Stop chasing payments. Start receiving them.
-        </h2>
-        <p className="text-sm text-mute mt-4 max-w-md mx-auto">
-          If your client doesn&apos;t open the invoice within 24 hours, the
-          next month of Pro is on us.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/signin"
-            className="bg-ink text-paper px-7 py-3 rounded-md text-sm font-medium hover:bg-ink/90 transition-colors"
-          >
-            Send your first invoice — free
-          </Link>
-        </div>
-        <p className="mt-4 text-xs text-mute">
-          No card required for Send. Cancel anytime.
-        </p>
-      </div>
-    </section>
+    <svg
+      aria-hidden
+      width="38"
+      height="22"
+      viewBox="0 0 38 22"
+      style={{ color: "var(--color-coral-deep)" }}
+    >
+      <path
+        d="M 4 18 Q 12 4, 30 6"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M 26 3 L 32 6 L 28 11"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
   );
 }
 
 function Footer() {
   return (
-    <footer className="px-6 sm:px-10 lg:px-14 py-10 border-t border-rule">
+    <footer
+      className="px-6 sm:px-10 lg:px-14 py-8"
+      style={{ borderTop: "1px solid rgba(10,10,10,0.08)" }}
+    >
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-mute">
         <span className="font-mono">invoice-app</span>
         <span>© {new Date().getFullYear()}</span>

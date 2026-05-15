@@ -9,65 +9,47 @@ type Plan = {
   name: string;
   monthly: number;
   annualMonthly: number;
-  cadence: string;
-  for: string;
+  blurb: string;
   features: string[];
-  cta: string;
   highlighted?: boolean;
-  guarantee?: string;
 };
 
 const PLANS: Plan[] = [
   {
     id: "send",
-    name: "Send",
+    name: "Free",
     monthly: 0,
     annualMonthly: 0,
-    cadence: "forever",
-    for: "Trying it on a single client.",
-    features: [
-      "3 invoices per month",
-      "1 saved client",
-      "PDF + email delivery",
-    ],
-    cta: "Start free",
+    blurb: "3 invoices / month",
+    features: ["1 client", "PDF invoice", "Email send"],
   },
   {
     id: "pro",
     name: "Pro",
     monthly: 12,
     annualMonthly: 9,
-    cadence: "per month",
-    for: "Committed solo op.",
+    blurb: "Everything you need",
     features: [
-      "Unlimited invoices and clients",
-      "Multi-currency · live FX",
-      "Stripe payment links",
-      "Branded invoice — logo + color",
-      "QuickBooks, Xero, Slack delivery",
-      "Agent API",
+      "Unlimited invoices",
+      "Unlimited clients",
+      "Automatic reminders",
+      "Branding",
+      "Payment links",
     ],
-    cta: "Start Pro",
     highlighted: true,
-    guarantee:
-      "If your client doesn't open within 24 hours, next month is on us.",
   },
   {
     id: "get-paid",
     name: "Get Paid",
     monthly: 29,
     annualMonthly: 24,
-    cadence: "per month",
-    for: "Retainer-runner. Tired of chasing.",
+    blurb: "For retainer-runners",
     features: [
       "Everything in Pro",
-      "Smart followups — polite → firm → final",
-      "Recurring invoices for retainers",
+      "Smart followups",
+      "Recurring invoices",
       "Late-fee policy",
     ],
-    cta: "Start Get Paid",
-    guarantee:
-      "24-hour open guarantee · if smart followups don't recover a stuck invoice in 60 days, full refund.",
   },
 ];
 
@@ -77,71 +59,63 @@ export function PricingBlock() {
   return (
     <section
       id="pricing"
-      className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-rule"
+      className="px-6 sm:px-10 lg:px-14 py-16 sm:py-20 relative"
     >
       <div className="max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-20 items-start mb-10">
-          <div>
-            <h2
-              className="font-serif text-4xl sm:text-5xl leading-[1.05]"
-              style={{ fontWeight: 400 }}
+        <div className="flex justify-between items-end flex-wrap gap-4 mb-8">
+          <h2
+            className="font-serif text-3xl sm:text-4xl leading-tight tracking-tight"
+            style={{ fontWeight: 700 }}
+          >
+            Pricing
+          </h2>
+          <div
+            role="tablist"
+            aria-label="Billing cadence"
+            className="inline-flex text-xs rounded-full p-1"
+            style={{ background: "rgba(10,10,10,0.06)" }}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!annual}
+              onClick={() => setAnnual(false)}
+              className="px-3.5 py-1.5 rounded-full transition-colors"
+              style={{
+                background: !annual ? "var(--color-paper)" : "transparent",
+                color: !annual ? "var(--color-ink)" : "var(--color-mute)",
+                boxShadow: !annual
+                  ? "0 1px 3px rgba(0,0,0,0.08)"
+                  : "none",
+              }}
             >
-              Pricing
-            </h2>
-            <p className="text-sm text-mute mt-3 max-w-xs">
-              Stop chasing payments. Start receiving them.
-            </p>
-          </div>
-          <div className="lg:justify-self-end">
-            <div
-              role="tablist"
-              aria-label="Billing cadence"
-              className="inline-flex text-xs rounded-full border border-rule overflow-hidden"
+              Monthly
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={annual}
+              onClick={() => setAnnual(true)}
+              className="px-3.5 py-1.5 rounded-full transition-colors inline-flex items-center gap-1.5"
+              style={{
+                background: annual ? "var(--color-paper)" : "transparent",
+                color: annual ? "var(--color-ink)" : "var(--color-mute)",
+                boxShadow: annual ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+              }}
             >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={!annual}
-                onClick={() => setAnnual(false)}
-                className="px-3.5 py-2"
-                style={{
-                  background: !annual ? "var(--color-ink)" : "transparent",
-                  color: !annual
-                    ? "var(--color-paper)"
-                    : "var(--color-mute)",
-                }}
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={annual}
-                onClick={() => setAnnual(true)}
-                className="px-3.5 py-2 inline-flex items-center gap-1.5"
-                style={{
-                  background: annual ? "var(--color-ink)" : "transparent",
-                  color: annual ? "var(--color-paper)" : "var(--color-mute)",
-                }}
-              >
-                Annual
-                <span className="text-[10px]" style={{ opacity: 0.75 }}>
-                  save 25%
-                </span>
-              </button>
-            </div>
+              Annual
+              <span className="text-[10px]" style={{ opacity: 0.65 }}>
+                save 25%
+              </span>
+            </button>
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
           {PLANS.map((plan) => (
             <PricingCard key={plan.id} plan={plan} annual={annual} />
           ))}
         </div>
-
-        <p className="text-xs text-mute mt-6 text-center">
-          No card required for Send. Cancel anytime.
-        </p>
       </div>
     </section>
   );
@@ -149,117 +123,79 @@ export function PricingBlock() {
 
 function PricingCard({ plan, annual }: { plan: Plan; annual: boolean }) {
   const price = annual ? plan.annualMonthly : plan.monthly;
+  const highlight = plan.highlighted;
   return (
     <div
-      className="rounded-2xl border p-6 flex flex-col"
+      className="relative bg-white rounded-2xl p-6 flex flex-col"
       style={{
-        background: plan.highlighted ? "var(--color-ink)" : "var(--color-card)",
-        color: plan.highlighted ? "var(--color-paper)" : "var(--color-ink)",
-        borderColor: plan.highlighted
-          ? "var(--color-ink)"
-          : "var(--color-rule)",
+        border: highlight
+          ? "2px solid var(--color-coral)"
+          : "1px solid rgba(10,10,10,0.08)",
+        boxShadow: highlight
+          ? "0 20px 50px -25px rgba(255,107,74,0.45)"
+          : "0 12px 30px -20px rgba(10,10,10,0.1)",
       }}
     >
-      <div className="flex justify-between items-center">
-        <div className="text-sm font-medium">{plan.name}</div>
-        {plan.highlighted && (
-          <span
-            className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded"
-            style={{
-              color: "var(--color-paper)",
-              background: "rgba(255,255,255,0.12)",
-            }}
-          >
-            Most popular
-          </span>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-baseline gap-2">
-        <span className="font-mono text-4xl" style={{ fontWeight: 300 }}>
-          ${price}
-        </span>
+      {highlight && (
         <span
-          className="text-xs"
-          style={{
-            color: plan.highlighted
-              ? "rgba(255,255,255,0.6)"
-              : "var(--color-mute)",
-          }}
+          className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-semibold text-paper"
+          style={{ background: "var(--color-coral)" }}
         >
-          {plan.cadence}
+          Most popular
         </span>
-        {plan.id !== "send" && annual && (
-          <span
-            className="text-[10px] ml-1"
-            style={{
-              color: plan.highlighted
-                ? "rgba(255,255,255,0.6)"
-                : "var(--color-mute)",
-            }}
-          >
-            billed yearly
-          </span>
-        )}
+      )}
+
+      <div className="font-serif text-3xl" style={{ fontWeight: 700 }}>
+        {plan.name}
       </div>
 
-      <div
-        className="text-xs mt-2"
-        style={{
-          color: plan.highlighted
-            ? "rgba(255,255,255,0.7)"
-            : "var(--color-mute)",
-        }}
-      >
-        {plan.for}
+      <div className="mt-2 flex items-baseline gap-1">
+        <span className="text-2xl font-bold">${price}</span>
+        <span className="text-sm text-mute">
+          {plan.id === "send" ? "" : "/mo"}
+        </span>
+      </div>
+      <div className="text-xs text-mute mt-1">
+        {plan.id !== "send" && annual ? "billed yearly · " : ""}
+        {plan.blurb}
       </div>
 
-      <ul className="mt-6 space-y-2 flex-1">
+      <ul className="mt-5 space-y-2 flex-1">
         {plan.features.map((f) => (
-          <li key={f} className="text-sm flex items-start gap-2">
-            <Check
-              size={14}
-              className="mt-1 flex-shrink-0"
+          <li key={f} className="flex items-start gap-2 text-sm">
+            <span
+              className="w-4 h-4 rounded-full flex items-center justify-center mt-0.5 shrink-0"
               style={{
-                color: plan.highlighted
-                  ? "rgba(255,255,255,0.8)"
-                  : "var(--color-ink)",
+                background: highlight
+                  ? "var(--color-coral)"
+                  : "var(--color-iris)",
               }}
-              strokeWidth={2}
-            />
-            <span style={{ opacity: 0.9 }}>{f}</span>
+              aria-hidden
+            >
+              <Check
+                size={10}
+                strokeWidth={3}
+                color={highlight ? "#fff" : "#6b3fa0"}
+              />
+            </span>
+            <span>{f}</span>
           </li>
         ))}
       </ul>
 
       <Link
         href="/signin"
-        className="mt-6 text-sm font-medium px-4 py-2.5 rounded-md text-center transition-colors"
+        className="mt-6 h-11 rounded-full text-sm font-semibold inline-flex items-center justify-center transition-colors"
         style={{
-          background: plan.highlighted
-            ? "var(--color-paper)"
-            : "var(--color-ink)",
-          color: plan.highlighted ? "var(--color-ink)" : "var(--color-paper)",
+          background: highlight ? "var(--color-coral)" : "var(--color-paper)",
+          color: highlight ? "var(--color-paper)" : "var(--color-ink)",
+          border: highlight
+            ? "none"
+            : "1.5px solid rgba(10,10,10,0.12)",
         }}
       >
-        {plan.cta}
+        Start free
       </Link>
-
-      {plan.guarantee && (
-        <div
-          className="text-[11px] mt-4 leading-relaxed pt-3 border-t"
-          style={{
-            borderColor: plan.highlighted
-              ? "rgba(255,255,255,0.15)"
-              : "var(--color-rule)",
-            color: plan.highlighted
-              ? "rgba(255,255,255,0.8)"
-              : "var(--color-mute)",
-          }}
-        >
-          {plan.guarantee}
-        </div>
-      )}
     </div>
   );
 }

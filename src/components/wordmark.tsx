@@ -1,48 +1,86 @@
-// Shared Nudge wordmark — yellow sunburst rays above the "u". Two sizes:
-// "lg" (landing nav), "sm" (signin header + app header).
+// Nudge wordmark — Fraunces 900 with soft terminals + 5-ray yellow
+// sunburst fan radiating from a point above the "u". Two sizes: "lg"
+// (landing nav, prominent), "sm" (signin/app header, footer).
 
-export function Wordmark({ size = "lg" }: { size?: "lg" | "sm" }) {
-  const fontSize = size === "lg" ? 34 : 20;
-  const burst =
-    size === "lg"
-      ? { w: 22, h: 18, top: -4, left: 18, sw: 1.8 }
-      : { w: 14, h: 12, top: -3, left: 11, sw: 2.4 };
-  const showSideRays = size === "lg";
+type Size = "lg" | "sm";
+
+const SCALE: Record<Size, { font: number; burst: number; offsetTop: number; padTop: number }> = {
+  lg: { font: 38, burst: 26, offsetTop: -10, padTop: 12 },
+  sm: { font: 22, burst: 16, offsetTop: -6, padTop: 7 },
+};
+
+export function Wordmark({ size = "lg" }: { size?: Size }) {
+  const s = SCALE[size];
+  // Centre of burst sits above the "u" — roughly 28% from the left edge
+  // of the wordmark for "Nudge".
+  const burstLeftPct = "26%";
+
   return (
     <div
       className="relative inline-flex"
-      style={{ paddingTop: size === "lg" ? 8 : 4 }}
+      style={{ paddingTop: s.padTop }}
     >
-      <svg
-        aria-hidden
-        width={burst.w}
-        height={burst.h}
-        viewBox="0 0 22 18"
-        style={{ position: "absolute", top: burst.top, left: burst.left }}
-      >
-        <g stroke="#f3b81f" strokeWidth={burst.sw} strokeLinecap="round" fill="none">
-          <line x1="11" y1="2" x2="11" y2="7" />
-          <line x1="4" y1="4" x2="7" y2="7.5" />
-          <line x1="18" y1="4" x2="15" y2="7.5" />
-          {showSideRays && (
-            <>
-              <line x1="2" y1="11" x2="5" y2="11" />
-              <line x1="17" y1="11" x2="20" y2="11" />
-            </>
-          )}
-        </g>
-      </svg>
+      <SunburstFan
+        size={s.burst}
+        style={{
+          position: "absolute",
+          top: s.offsetTop,
+          left: burstLeftPct,
+          transform: "translateX(-50%)",
+        }}
+      />
       <span
         className="font-serif"
         style={{
-          fontWeight: 700,
-          fontSize,
-          letterSpacing: "-0.03em",
+          fontWeight: 900,
+          fontSize: s.font,
+          letterSpacing: "-0.035em",
           lineHeight: 1,
+          fontVariationSettings: '"opsz" 144, "SOFT" 100, "WONK" 0',
         }}
       >
         Nudge
       </span>
     </div>
+  );
+}
+
+// 5-ray fan: centre vertical + two mid + two outer rays. All radiate
+// upward from a point just below the bottom of the viewBox so the burst
+// reads as "emerging from" the letter below.
+function SunburstFan({
+  size,
+  style,
+}: {
+  size: number;
+  style?: React.CSSProperties;
+}) {
+  // Rays are drawn from a single origin (cx=14, cy=18) toward 5 endpoints.
+  // Angles, measured from vertical: -55°, -28°, 0°, +28°, +55°.
+  // Length is constant; line caps are rounded.
+  return (
+    <svg
+      aria-hidden
+      width={size}
+      height={(size * 18) / 28}
+      viewBox="0 0 28 18"
+      style={style}
+    >
+      <g
+        stroke="#f3b81f"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        fill="none"
+      >
+        {/* centre */}
+        <line x1="14" y1="16" x2="14" y2="3" />
+        {/* mid left + right (~28° from vertical) */}
+        <line x1="14" y1="16" x2="8" y2="5" />
+        <line x1="14" y1="16" x2="20" y2="5" />
+        {/* outer left + right (~55° from vertical) */}
+        <line x1="14" y1="16" x2="3" y2="8" />
+        <line x1="14" y1="16" x2="25" y2="8" />
+      </g>
+    </svg>
   );
 }

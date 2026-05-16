@@ -1,6 +1,6 @@
 export async function GET() {
   return Response.json({
-    name: "invoice-app API",
+    name: "Nudge API",
     version: "v1",
     auth: "Bearer <api key>",
     endpoints: {

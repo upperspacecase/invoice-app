@@ -54,7 +54,7 @@ export function apiAuthError(err: ApiAuthErr): Response {
       status: err.status,
       headers:
         err.status === 401
-          ? { "WWW-Authenticate": 'Bearer realm="invoice-app"' }
+          ? { "WWW-Authenticate": 'Bearer realm="Nudge"' }
           : undefined,
     }
   );

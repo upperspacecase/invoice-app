@@ -5,6 +5,7 @@ import { FeatureCards } from "@/components/landing/feature-cards";
 import { SocialProof } from "@/components/landing/social-proof";
 import { ClosingCTA } from "@/components/landing/closing-cta";
 import { PricingBlock } from "@/components/pricing-block";
+import { Wordmark } from "@/components/wordmark";
 
 export default function LandingPage() {
   return (
@@ -25,45 +26,13 @@ export default function LandingPage() {
   );
 }
 
-function Wordmark() {
-  return (
-    <div className="relative inline-flex" style={{ paddingTop: 8 }}>
-      <svg
-        aria-hidden
-        width="22"
-        height="18"
-        viewBox="0 0 22 18"
-        style={{ position: "absolute", top: -4, left: 18 }}
-      >
-        <g stroke="#f3b81f" strokeWidth="1.8" strokeLinecap="round" fill="none">
-          <line x1="11" y1="2" x2="11" y2="7" />
-          <line x1="4" y1="4" x2="7" y2="7.5" />
-          <line x1="18" y1="4" x2="15" y2="7.5" />
-          <line x1="2" y1="11" x2="5" y2="11" />
-          <line x1="17" y1="11" x2="20" y2="11" />
-        </g>
-      </svg>
-      <span
-        className="font-serif"
-        style={{
-          fontWeight: 700,
-          fontSize: 34,
-          letterSpacing: "-0.03em",
-          lineHeight: 1,
-        }}
-      >
-        Nudge
-      </span>
-    </div>
-  );
-}
 
 function Nav() {
   return (
     <header className="px-6 sm:px-10 lg:px-14 pt-6">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link href="/" aria-label="invoice-app home">
-          <Wordmark />
+        <Link href="/" aria-label="Nudge home">
+          <Wordmark size="lg" />
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7 text-sm">
           <a href="#how-it-works" className="hidden sm:inline">
@@ -213,7 +182,7 @@ function Footer() {
       style={{ borderTop: "1px solid rgba(10,10,10,0.08)" }}
     >
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-mute">
-        <span className="font-mono">invoice-app</span>
+        <Wordmark size="sm" />
         <span>© {new Date().getFullYear()}</span>
       </div>
     </footer>

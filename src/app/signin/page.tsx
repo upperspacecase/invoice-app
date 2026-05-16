@@ -1,17 +1,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { SignInForm } from "@/components/sign-in-form";
+import { Wordmark } from "@/components/wordmark";
 
 export default function SignInPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-6 sm:px-10 lg:px-14 pt-6">
         <div className="max-w-6xl mx-auto">
-          <Link
-            href="/"
-            className="text-sm font-mono tracking-tight text-ink"
-          >
-            invoice-app
+          <Link href="/" aria-label="Nudge home">
+            <Wordmark size="sm" />
           </Link>
         </div>
       </header>

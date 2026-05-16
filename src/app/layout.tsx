@@ -19,9 +19,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "invoice-app — send an invoice in three taps",
+  title: "Nudge — invoice once, stop chasing",
   description:
-    "Pick client. Confirm amount. Send. No accounting bloat.",
+    "Send a clean invoice in seconds. Automatic reminders follow up until it's paid.",
 };
 
 export default function RootLayout({

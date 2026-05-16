@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Settings, LogOut } from "lucide-react";
 import { signOutClient } from "@/lib/firebase/client";
+import { Wordmark } from "@/components/wordmark";
 
 export function AppHeader() {
   const router = useRouter();
@@ -30,11 +31,8 @@ export function AppHeader() {
   return (
     <header className="px-6 sm:px-10 lg:px-14 py-5 border-b border-rule">
       <div className="max-w-2xl mx-auto flex items-center justify-between">
-        <Link
-          href="/app"
-          className="text-sm font-mono tracking-tight text-ink"
-        >
-          invoice-app
+        <Link href="/app" aria-label="Nudge home">
+          <Wordmark size="sm" />
         </Link>
         <div className="flex items-center gap-1">
           <Link

@@ -27,28 +27,33 @@ export default function LandingPage() {
 
 function Wordmark() {
   return (
-    <div className="flex items-center gap-1">
-      <span
-        className="font-serif text-2xl tracking-tight"
-        style={{ fontWeight: 700, letterSpacing: "-0.02em" }}
-      >
-        invoice-app
-      </span>
+    <div className="relative inline-flex" style={{ paddingTop: 8 }}>
       <svg
         aria-hidden
-        width="14"
-        height="14"
-        viewBox="0 0 14 14"
-        style={{ marginTop: "-12px" }}
+        width="22"
+        height="18"
+        viewBox="0 0 22 18"
+        style={{ position: "absolute", top: -4, left: 18 }}
       >
-        <g stroke="var(--color-coral)" strokeWidth="1.6" strokeLinecap="round">
-          <line x1="7" y1="2" x2="7" y2="6" />
-          <line x1="11" y1="4" x2="9" y2="6.5" />
-          <line x1="3" y1="4" x2="5" y2="6.5" />
-          <line x1="12" y1="8" x2="10" y2="8" />
-          <line x1="2" y1="8" x2="4" y2="8" />
+        <g stroke="#f3b81f" strokeWidth="1.8" strokeLinecap="round" fill="none">
+          <line x1="11" y1="2" x2="11" y2="7" />
+          <line x1="4" y1="4" x2="7" y2="7.5" />
+          <line x1="18" y1="4" x2="15" y2="7.5" />
+          <line x1="2" y1="11" x2="5" y2="11" />
+          <line x1="17" y1="11" x2="20" y2="11" />
         </g>
       </svg>
+      <span
+        className="font-serif"
+        style={{
+          fontWeight: 700,
+          fontSize: 34,
+          letterSpacing: "-0.03em",
+          lineHeight: 1,
+        }}
+      >
+        Nudge
+      </span>
     </div>
   );
 }

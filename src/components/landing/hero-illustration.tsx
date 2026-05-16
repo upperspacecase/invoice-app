@@ -1,12 +1,13 @@
 import { Check, Bell } from "lucide-react";
 
-// Phone-style invoice card on the left, status timeline floating on the
-// right. Decorative blobs (yellow, green) sit behind the phone. On mobile
-// the timeline collapses into a vertical stack below the phone.
+// Phone-style invoice card on the left, paper plane + dashed trail above,
+// status timeline floating on the right. Decorative blobs (yellow sun,
+// mint leaf-blob, dots, blue squiggle) sit behind. On smaller widths the
+// timeline collapses into a vertical stack below the phone.
 export function HeroIllustration() {
   return (
-    <div className="relative w-full max-w-lg mx-auto lg:mx-0 lg:ml-auto">
-      {/* yellow blob behind the phone */}
+    <div className="relative w-full max-w-lg mx-auto lg:mx-0 lg:ml-auto" style={{ paddingTop: 20 }}>
+      {/* sun blob */}
       <div
         aria-hidden
         className="absolute"
@@ -15,42 +16,112 @@ export function HeroIllustration() {
           height: 360,
           borderRadius: "50%",
           background: "var(--color-sun)",
-          top: "-30px",
-          left: "-10px",
+          top: 0,
+          left: -10,
           opacity: 0.65,
           zIndex: 0,
         }}
       />
-      {/* mint blob */}
+      {/* mint leaf-blob (organic shape, rotated) */}
       <div
         aria-hidden
         className="absolute hidden sm:block"
         style={{
-          width: 120,
-          height: 80,
-          borderRadius: "50%",
+          width: 140,
+          height: 90,
+          borderRadius: "60% 40% 50% 50% / 60% 50% 50% 40%",
           background: "var(--color-mint)",
-          bottom: "20px",
-          right: "-30px",
-          opacity: 0.7,
+          bottom: 30,
+          right: -40,
+          opacity: 0.75,
           zIndex: 0,
+          transform: "rotate(-12deg)",
         }}
       />
-      {/* small dotted accents */}
-      <Dots top={-18} right={-18} color="var(--color-coral-soft)" />
+      {/* dotted cluster top-right */}
+      <Dots top={60} right={-20} color="var(--color-coral-soft)" />
+
+      {/* paper plane top-right */}
+      <svg
+        aria-hidden
+        width="110"
+        height="90"
+        viewBox="0 0 110 90"
+        className="absolute"
+        style={{ top: -20, right: 30, zIndex: 3 }}
+      >
+        <path
+          d="M 95 8 L 8 38 L 38 50 L 52 78 Z"
+          fill="var(--color-coral)"
+          stroke="var(--color-coral-deep)"
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M 38 50 L 95 8 L 52 78 Z"
+          fill="var(--color-coral-deep)"
+          opacity="0.4"
+        />
+        <path
+          d="M 38 50 L 60 42"
+          stroke="#fff"
+          strokeWidth="1"
+          fill="none"
+          opacity="0.6"
+        />
+      </svg>
+
+      {/* dashed trail from phone toward the plane */}
+      <svg
+        aria-hidden
+        width="180"
+        height="160"
+        viewBox="0 0 180 160"
+        className="absolute hidden sm:block"
+        style={{ top: 30, right: 60, zIndex: 2 }}
+      >
+        <path
+          d="M 30 130 C 40 90, 70 60, 110 40"
+          stroke="rgba(10,10,10,0.35)"
+          strokeWidth="1.4"
+          strokeDasharray="3 5"
+          fill="none"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      {/* small blue squiggle */}
+      <svg
+        aria-hidden
+        width="40"
+        height="30"
+        viewBox="0 0 40 30"
+        className="absolute hidden sm:block"
+        style={{ top: 230, right: -30, zIndex: 1, color: "#5a8de8" }}
+      >
+        <path
+          d="M 4 22 Q 10 6, 18 16 T 36 8"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          fill="none"
+        />
+      </svg>
 
       {/* phone-style invoice card */}
       <div
-        className="relative bg-white rounded-3xl border p-6 sm:p-7"
+        className="relative bg-white"
         style={{
-          borderColor: "rgba(10,10,10,0.06)",
+          borderRadius: 24,
+          padding: 28,
+          border: "1px solid rgba(10,10,10,0.06)",
           boxShadow:
             "0 30px 60px -30px rgba(10,10,10,0.18), 0 12px 24px -12px rgba(10,10,10,0.08)",
           maxWidth: 360,
           zIndex: 1,
         }}
       >
-        <div className="text-base font-semibold text-ink">Invoice #1037</div>
+        <div style={{ fontSize: 16, fontWeight: 600 }}>Invoice #1037</div>
 
         <div className="mt-5 space-y-2.5">
           <div className="flex items-center gap-2.5">
@@ -78,13 +149,21 @@ export function HeroIllustration() {
         </div>
 
         <span
-          className="inline-flex items-center gap-1.5 mt-5 text-xs px-2.5 py-1 rounded-full"
+          className="inline-flex items-center gap-1.5 mt-5 text-sm font-medium"
           style={{
-            background: "rgba(45,122,79,0.12)",
+            background: "rgba(45,122,79,0.14)",
             color: "var(--color-paid)",
+            padding: "6px 12px",
+            borderRadius: 8,
           }}
         >
-          <Check size={12} strokeWidth={3} />
+          <span
+            className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-white"
+            style={{ background: "var(--color-paid)" }}
+            aria-hidden
+          >
+            <Check size={9} strokeWidth={3} />
+          </span>
           Sent
         </span>
 
@@ -112,9 +191,7 @@ export function HeroIllustration() {
         style={{ right: "-110px", top: "50px", width: 220, zIndex: 2 }}
       >
         <TimelineCard
-          icon={
-            <PaperPlaneIcon />
-          }
+          icon={<PaperPlaneIcon />}
           iconBg="#cfe4ff"
           iconColor="#1e6fbb"
           title="Sent"

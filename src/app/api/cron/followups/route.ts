@@ -1,7 +1,6 @@
 import "server-only";
 import {
   getAutomation,
-  getBusiness,
   listAllUserIds,
   listInvoices,
 } from "@/lib/server/store";
@@ -9,7 +8,10 @@ import { sendInvoiceReminder } from "@/lib/server/dispatch";
 
 export const runtime = "nodejs";
 
-const REMIND_AFTER_DAYS = 7;
+// Smart follow-ups cadence: a gentle nudge on day 3, then 10, then 21 after
+// an invoice was sent. The assistant stops after the third.
+const SCHEDULE_DAYS = [3, 10, 21];
+const DAY = 24 * 60 * 60 * 1000;
 
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -22,7 +24,7 @@ export async function GET(req: Request) {
   if (!authorized(req)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const cutoff = Date.now() - REMIND_AFTER_DAYS * 24 * 60 * 60 * 1000;
+  const now = Date.now();
   const uids = await listAllUserIds();
   let processed = 0;
   let reminded = 0;
@@ -31,11 +33,6 @@ export async function GET(req: Request) {
 
   for (const uid of uids) {
     try {
-      const business = await getBusiness(uid);
-      if (business.tier !== "get-paid") {
-        skipped++;
-        continue;
-      }
       const auto = await getAutomation(uid, "auto-remind");
       if (!auto?.enabled) {
         skipped++;
@@ -43,21 +40,21 @@ export async function GET(req: Request) {
       }
       processed++;
       const invoices = await listInvoices(uid);
-      const due = invoices.filter(
-        (i) =>
-          i.status === "sent" &&
-          i.sentAt <= cutoff &&
-          !i.lastReminderAt &&
-          i.channel === "email"
-      );
-      for (const inv of due) {
+      for (const inv of invoices) {
+        if (inv.status !== "sent" || inv.channel !== "email") continue;
+        const count = inv.reminderCount ?? 0;
+        if (count >= SCHEDULE_DAYS.length) continue; // cadence finished
+        const daysSinceSent = (now - inv.sentAt) / DAY;
+        if (daysSinceSent < SCHEDULE_DAYS[count]) continue; // not due yet
+        // Guard against a second nudge inside the same run window.
+        if (inv.lastReminderAt && now - inv.lastReminderAt < 20 * 60 * 60 * 1000) {
+          continue;
+        }
         const result = await sendInvoiceReminder(uid, inv.id, "agent");
         if (result) reminded++;
       }
     } catch (e) {
-      errors.push(
-        `${uid}: ${e instanceof Error ? e.message : "unknown"}`
-      );
+      errors.push(`${uid}: ${e instanceof Error ? e.message : "unknown"}`);
     }
   }
 

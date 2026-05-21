@@ -13,7 +13,6 @@ import type {
   DeliveryChannel,
   IntegrationId,
   Invoice,
-  Tier,
 } from "../types";
 import type { FeatureId } from "../features";
 import {
@@ -148,37 +147,13 @@ export async function getBusiness(uid: string): Promise<Business> {
     payment: data.payment ?? initialBusiness.payment,
     company: data.company ?? initialBusiness.company,
     currency: data.currency ?? initialBusiness.currency,
-    tier: data.tier ?? "send",
     brandColor:
       typeof data.brandColor === "string" ? data.brandColor : undefined,
     logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : undefined,
     onboarded: data.onboarded ?? true,
     stripeAccountId:
       typeof data.stripeAccountId === "string" ? data.stripeAccountId : undefined,
-    stripeCustomerId:
-      typeof data.stripeCustomerId === "string" ? data.stripeCustomerId : undefined,
-    stripeSubscriptionId:
-      typeof data.stripeSubscriptionId === "string"
-        ? data.stripeSubscriptionId
-        : undefined,
   };
-}
-
-export async function setTier(uid: string, tier: Tier): Promise<Business> {
-  const current = await getBusiness(uid);
-  if (current.tier === tier) return current;
-  await userDoc(uid).collection("meta").doc(PROFILE_DOC).set({ tier }, { merge: true });
-  await pushActivity(
-    uid,
-    "you",
-    tier === "send"
-      ? "Switched to Send (free)"
-      : tier === "pro"
-      ? "Upgraded to Pro"
-      : "Upgraded to Get Paid",
-    "billing.demo"
-  );
-  return { ...current, tier };
 }
 
 export async function updateBusiness(
@@ -312,6 +287,8 @@ function normaliseInvoice(id: string, data: Record<string, unknown>): Invoice {
     lastReminderAt: data.lastReminderAt
       ? fromTimestamp(data.lastReminderAt)
       : undefined,
+    reminderCount:
+      typeof data.reminderCount === "number" ? data.reminderCount : 0,
     paymentLinkUrl:
       typeof data.paymentLinkUrl === "string" ? data.paymentLinkUrl : undefined,
     stripePaymentLinkId:
@@ -450,12 +427,20 @@ export async function remindInvoice(
   const inv = normaliseInvoice(snap.id, snap.data() ?? {});
   if (inv.status !== "sent") return inv;
   const now = Date.now();
+  const nextCount = (inv.reminderCount ?? 0) + 1;
   await ref.set(
-    { lastReminderAt: Timestamp.fromMillis(now) },
+    { lastReminderAt: Timestamp.fromMillis(now), reminderCount: nextCount },
     { merge: true }
   );
-  await pushActivity(uid, actor, `Sent reminder for ${id}`, `to ${inv.clientName}`);
-  return { ...inv, lastReminderAt: now };
+  const ordinal =
+    nextCount === 1 ? "first" : nextCount === 2 ? "second" : "third";
+  await pushActivity(
+    uid,
+    actor,
+    `Assistant sent ${ordinal} follow-up for ${id}`,
+    `to ${inv.clientName}`
+  );
+  return { ...inv, lastReminderAt: now, reminderCount: nextCount };
 }
 
 // ---------- integrations ----------

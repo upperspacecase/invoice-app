@@ -5,10 +5,5 @@ import { BillingPlans } from "@/components/billing-plans";
 export default async function SettingsBillingPage() {
   const { uid } = await requireOnboardedSession();
   const business = await getBusiness(uid);
-  return (
-    <BillingPlans
-      current={business.tier}
-      stripeAccountId={business.stripeAccountId}
-    />
-  );
+  return <BillingPlans stripeAccountId={business.stripeAccountId} />;
 }

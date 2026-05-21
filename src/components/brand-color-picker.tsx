@@ -40,9 +40,9 @@ export function BrandColorPicker({
   }
 
   return (
-    <div className="rounded-xl border border-rule p-4 bg-card">
+    <div className="rounded-xl border border-neutral-200 p-4 bg-white">
       <div className="text-sm font-medium mb-1">Brand color</div>
-      <div className="text-xs text-mute mb-3">
+      <div className="text-xs text-neutral-500 mb-3">
         Used on the accent bar at the top of every PDF and the pay-link
         button.
       </div>
@@ -59,13 +59,13 @@ export function BrandColorPicker({
               background: p,
               boxShadow:
                 color === p
-                  ? `0 0 0 2px var(--color-paper), 0 0 0 4px ${p}`
+                  ? `0 0 0 2px #ffffff, 0 0 0 4px ${p}`
                   : "none",
             }}
           />
         ))}
         <label
-          className="ml-1 inline-flex items-center gap-2 text-xs text-mute cursor-pointer"
+          className="ml-1 inline-flex items-center gap-2 text-xs text-neutral-500 cursor-pointer"
           style={{ opacity: disabled ? 0.5 : 1 }}
         >
           <input
@@ -78,13 +78,13 @@ export function BrandColorPicker({
           Custom
         </label>
         {saved && !pending && (
-          <span className="text-xs text-[var(--color-paid)] ml-2">
+          <span className="text-xs text-black ml-2">
             Saved
           </span>
         )}
       </div>
       {error && (
-        <div className="text-xs text-accent mt-2">{error}</div>
+        <div className="text-xs text-black mt-2">{error}</div>
       )}
     </div>
   );

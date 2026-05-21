@@ -14,27 +14,16 @@ export type DeliveryChannel =
   | "webhook"
   | "portal";
 
-export type Tier = "send" | "pro" | "get-paid";
-
-export const TIER_RANK: Record<Tier, number> = {
-  send: 0,
-  pro: 1,
-  "get-paid": 2,
-};
-
 export type Business = {
   name: string;
   email: string;
   payment: string;
   company: string;
   currency: CurrencyCode;
-  tier: Tier;
   brandColor?: string;
   logoUrl?: string;
   onboarded: boolean;
   stripeAccountId?: string;
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
 };
 
 export type Client = {
@@ -63,6 +52,7 @@ export type Invoice = {
   sentAt: number;
   paidAt?: number;
   lastReminderAt?: number;
+  reminderCount?: number;
   paymentLinkUrl?: string;
   stripePaymentLinkId?: string;
 };

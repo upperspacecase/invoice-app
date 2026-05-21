@@ -39,7 +39,7 @@ export default async function LedgerPage() {
   return (
     <div className="pt-10 sm:pt-14">
       <div className="mb-8">
-        <div className="text-xs uppercase tracking-widest text-mute">
+        <div className="text-xs uppercase tracking-widest text-neutral-500">
           Ledger
         </div>
         <h1
@@ -50,14 +50,14 @@ export default async function LedgerPage() {
         </h1>
       </div>
 
-      <div className="bg-ink text-paper rounded-2xl p-6 mb-8">
-        <div className="text-xs uppercase tracking-widest text-paper/60">
+      <div className="bg-black text-white rounded-2xl p-6 mb-8">
+        <div className="text-xs uppercase tracking-widest text-white/60">
           Outstanding · {business.currency} equiv.
         </div>
         <div className="font-mono text-5xl mt-3" style={{ fontWeight: 300 }}>
           {formatMoney(outstandingDefault, business.currency)}
         </div>
-        <div className="text-xs text-paper/60 mt-3 flex flex-wrap gap-x-3 gap-y-1">
+        <div className="text-xs text-white/60 mt-3 flex flex-wrap gap-x-3 gap-y-1">
           <span>{unpaid.length} unpaid</span>
           {breakdown.length > 0 && <span>·</span>}
           {breakdown.map((b) => (
@@ -69,20 +69,20 @@ export default async function LedgerPage() {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        <div className="text-xs uppercase tracking-widest text-mute">
+        <div className="text-xs uppercase tracking-widest text-neutral-500">
           Recent
         </div>
         <Link
           href="/app/activity"
-          className="text-xs text-mute inline-flex items-center gap-1.5 hover:text-ink transition-colors"
+          className="text-xs text-neutral-500 inline-flex items-center gap-1.5 hover:text-black transition-colors"
         >
           <span
             aria-hidden
             className="inline-block w-1.5 h-1.5 rounded-full"
             style={{
               background: agentActive
-                ? "var(--color-paid)"
-                : "var(--color-rule)",
+                ? "#000000"
+                : "#e5e5e5",
             }}
           />
           {agentActive ? "Agent active" : "Agent paused"}
@@ -93,14 +93,14 @@ export default async function LedgerPage() {
         {invoices.map((inv) => (
           <li
             key={inv.id}
-            className="flex items-center justify-between py-4 border-b border-rule gap-3"
+            className="flex items-center justify-between py-4 border-b border-neutral-200 gap-3"
           >
             <ChannelIcon channel={inv.channel} />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">
                 {inv.clientName}
               </div>
-              <div className="text-xs text-mute mt-0.5 truncate">
+              <div className="text-xs text-neutral-500 mt-0.5 truncate">
                 {inv.id} · {inv.date} · {channelLabel(inv.channel)}
               </div>
             </div>
@@ -111,10 +111,7 @@ export default async function LedgerPage() {
               <div
                 className="text-[10px] uppercase tracking-widest mt-0.5 flex items-center gap-2 justify-end"
                 style={{
-                  color:
-                    inv.status === "paid"
-                      ? "var(--color-paid)"
-                      : "var(--color-accent)",
+                  color: inv.status === "paid" ? "#737373" : "#000000",
                 }}
               >
                 {inv.status}
@@ -122,7 +119,7 @@ export default async function LedgerPage() {
                   href={`/api/v1/invoices/${inv.id}/pdf`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[10px] uppercase tracking-widest text-mute hover:text-ink"
+                  className="text-[10px] uppercase tracking-widest text-neutral-500 hover:text-black"
                   aria-label={`View ${inv.id} PDF`}
                 >
                   PDF
@@ -136,7 +133,7 @@ export default async function LedgerPage() {
       <div className="mt-10">
         <Link
           href="/app/new"
-          className="w-full h-14 rounded-xl bg-ink text-paper flex items-center justify-center gap-2 text-sm font-medium hover:bg-ink/90 transition-colors"
+          className="w-full h-14 rounded-xl bg-black text-white flex items-center justify-center gap-2 text-sm font-medium hover:bg-neutral-800 transition-colors"
         >
           <Plus size={16} />
           Send invoice

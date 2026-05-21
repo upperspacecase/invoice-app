@@ -26,7 +26,7 @@ function Nav() {
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link
           href="/"
-          className="text-sm font-mono tracking-tight text-ink"
+          className="text-sm font-mono tracking-tight text-black"
         >
           invoice-app
         </Link>
@@ -42,7 +42,7 @@ function Nav() {
           </Link>
           <Link
             href="/signin"
-            className="text-sm bg-ink text-paper px-4 py-2 rounded-md hover:bg-ink/90 transition-colors"
+            className="text-sm bg-black text-white px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors"
           >
             Send your first invoice — free
           </Link>
@@ -64,7 +64,7 @@ function Hero() {
             Get paid before<br />
             the meeting ends.
           </h1>
-          <p className="mt-6 text-lg text-mute max-w-md">
+          <p className="mt-6 text-lg text-neutral-500 max-w-md">
             Invoice from your phone, on the call, in under 60 seconds. Your
             client clicks a payment link from their inbox before they&apos;ve
             stood up.
@@ -72,19 +72,19 @@ function Hero() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/signin"
-              className="bg-ink text-paper px-7 py-3 rounded-md text-sm font-medium hover:bg-ink/90 transition-colors"
+              className="bg-black text-white px-7 py-3 rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
             >
               Send your first invoice — free
             </Link>
             <a
               href="#how-it-works"
-              className="border border-rule px-7 py-3 rounded-md text-sm font-medium flex items-center gap-2 hover:border-ink/40 transition-colors"
+              className="border border-neutral-200 px-7 py-3 rounded-md text-sm font-medium flex items-center gap-2 hover:border-neutral-400 transition-colors"
             >
               <Play size={14} />
               See it on your phone
             </a>
           </div>
-          <p className="mt-4 text-xs text-mute">
+          <p className="mt-4 text-xs text-neutral-500">
             No card required for Send. Cancel anytime.
           </p>
         </div>
@@ -119,7 +119,7 @@ function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-rule"
+      className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-neutral-200"
     >
       <div className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-20">
         <h2
@@ -131,11 +131,11 @@ function HowItWorks() {
         <div className="grid sm:grid-cols-3 gap-8 sm:gap-10">
           {items.map(({ icon: Icon, title, body }) => (
             <div key={title}>
-              <div className="w-10 h-10 rounded-full border border-rule flex items-center justify-center mb-5">
+              <div className="w-10 h-10 rounded-full border border-neutral-200 flex items-center justify-center mb-5">
                 <Icon size={18} strokeWidth={1.5} />
               </div>
               <div className="text-sm font-medium mb-2">{title}</div>
-              <div className="text-sm text-mute leading-relaxed">{body}</div>
+              <div className="text-sm text-neutral-500 leading-relaxed">{body}</div>
             </div>
           ))}
         </div>
@@ -146,7 +146,7 @@ function HowItWorks() {
 
 function CloseCTA() {
   return (
-    <section className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-rule">
+    <section className="px-6 sm:px-10 lg:px-14 py-20 sm:py-24 border-t border-neutral-200">
       <div className="max-w-2xl mx-auto text-center">
         <h2
           className="font-serif text-3xl sm:text-4xl leading-tight"
@@ -154,19 +154,19 @@ function CloseCTA() {
         >
           Stop chasing payments. Start receiving them.
         </h2>
-        <p className="text-sm text-mute mt-4 max-w-md mx-auto">
+        <p className="text-sm text-neutral-500 mt-4 max-w-md mx-auto">
           If your client doesn&apos;t open the invoice within 24 hours, the
           next month of Pro is on us.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href="/signin"
-            className="bg-ink text-paper px-7 py-3 rounded-md text-sm font-medium hover:bg-ink/90 transition-colors"
+            className="bg-black text-white px-7 py-3 rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
           >
             Send your first invoice — free
           </Link>
         </div>
-        <p className="mt-4 text-xs text-mute">
+        <p className="mt-4 text-xs text-neutral-500">
           No card required for Send. Cancel anytime.
         </p>
       </div>
@@ -176,8 +176,8 @@ function CloseCTA() {
 
 function Footer() {
   return (
-    <footer className="px-6 sm:px-10 lg:px-14 py-10 border-t border-rule">
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-mute">
+    <footer className="px-6 sm:px-10 lg:px-14 py-10 border-t border-neutral-200">
+      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-500">
         <span className="font-mono">invoice-app</span>
         <span>© {new Date().getFullYear()}</span>
       </div>

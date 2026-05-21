@@ -9,7 +9,7 @@ export default function SignInPage() {
         <div className="max-w-6xl mx-auto">
           <Link
             href="/"
-            className="text-sm font-mono tracking-tight text-ink"
+            className="text-sm font-mono tracking-tight text-black"
           >
             invoice-app
           </Link>
@@ -24,15 +24,15 @@ export default function SignInPage() {
           >
             Sign in
           </h1>
-          <p className="text-sm text-mute mb-8">
+          <p className="text-sm text-neutral-500 mb-8">
             We&apos;ll email you a link. No password.
           </p>
           <Suspense
-            fallback={<div className="text-sm text-mute">Loading…</div>}
+            fallback={<div className="text-sm text-neutral-500">Loading…</div>}
           >
             <SignInForm />
           </Suspense>
-          <p className="text-xs text-mute mt-8 text-center">
+          <p className="text-xs text-neutral-500 mt-8 text-center">
             <Link href="/" className="underline underline-offset-4">
               Back to home
             </Link>

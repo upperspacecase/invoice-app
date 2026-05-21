@@ -112,40 +112,46 @@ export async function sendInvoiceReminder(
   invoiceId: string,
   actor: ActivityActor = "agent"
 ): Promise<Invoice | null> {
-  const inv = await remindInvoice(uid, invoiceId, actor);
-  if (!inv) return null;
-  if (inv.channel !== "email") {
-    return inv;
-  }
+  const current = await getInvoice(uid, invoiceId);
+  if (!current) return null;
+  if (current.status !== "sent") return current;
+
+  const updated = await remindInvoice(uid, invoiceId, actor);
+  if (!updated) return current;
+  if (updated.channel !== "email") return updated;
+
+  // The follow-up cadence runs three nudges (day 3 / 10 / 21); copy escalates
+  // gently with each stage but never past the third.
+  const stage = Math.min(updated.reminderCount ?? 1, 3) as 1 | 2 | 3;
   const business = await getBusiness(uid);
-  const fresh = (await getInvoice(uid, invoiceId)) ?? inv;
   const result = await sendReminderEmail({
     business,
-    invoice: fresh,
+    invoice: updated,
     replyTo: business.email,
-    paymentLinkUrl: fresh.paymentLinkUrl,
+    paymentLinkUrl: updated.paymentLinkUrl,
+    stage,
   });
   if (result.ok) {
     await logActivity(
       uid,
       "system",
-      `Emailed reminder for ${invoiceId}`,
+      `Emailed follow-up for ${invoiceId}`,
       `resend.id=${result.id}`
     );
   } else if (result.reason === "not-configured") {
     await logActivity(
       uid,
       "system",
-      `Reminder email skipped for ${invoiceId}`,
+      `Follow-up email skipped for ${invoiceId}`,
       result.detail
     );
   } else {
     await logActivity(
       uid,
       "system",
-      `Reminder email failed for ${invoiceId}`,
+      `Follow-up email failed for ${invoiceId}`,
       result.detail
     );
   }
-  return fresh;
+  return updated;
 }

@@ -2,12 +2,12 @@ import { Mail, Link as LinkIcon } from "lucide-react";
 import type { DeliveryChannel } from "@/lib/types";
 
 const COLORS: Record<DeliveryChannel, string> = {
-  email: "#0a0a0a",
-  quickbooks: "#2CA01C",
-  xero: "#13B5EA",
-  slack: "#4A154B",
-  webhook: "#0a0a0a",
-  portal: "#c44e2c",
+  email: "#000000",
+  quickbooks: "#000000",
+  xero: "#000000",
+  slack: "#000000",
+  webhook: "#000000",
+  portal: "#000000",
 };
 
 const LABELS: Record<DeliveryChannel, string> = {

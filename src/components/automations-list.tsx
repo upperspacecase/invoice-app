@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import { setAutomationAction } from "@/app/_actions";
 import { FeatureBadge, featureStatus } from "@/components/feature-lock";
-import type { Automation, AutomationId, Tier } from "@/lib/types";
+import type { Automation, AutomationId } from "@/lib/types";
 import type { FeatureId } from "@/lib/features";
 
 // Maps each persisted automation row to its feature entry so gating logic
-// (built? required tier?) is sourced from the single feature catalog.
+// (built yet?) is sourced from the single feature catalog.
 const FEATURE_FOR_AUTOMATION: Record<AutomationId, FeatureId> = {
   "auto-remind": "auto-reminders",
   "auto-mark-paid": "auto-mark-paid",
@@ -29,11 +29,9 @@ const EXTRA_ROWS: ReadonlyArray<{
 
 export function AutomationsList({
   automations,
-  userTier,
   votes,
 }: {
   automations: Automation[];
-  userTier: Tier;
   votes: FeatureId[];
 }) {
   const [pendingId, setPendingId] = useState<AutomationId | null>(null);
@@ -56,29 +54,24 @@ export function AutomationsList({
 
   return (
     <div>
-      {error && <div className="text-xs text-accent mb-3">{error}</div>}
+      {error && <div className="text-xs text-black mb-3">{error}</div>}
       <ul className="space-y-2">
         {automations.map((a) => {
           const feature = FEATURE_FOR_AUTOMATION[a.id];
-          const status = featureStatus(feature, userTier);
-          const interactive = status === "allowed";
+          const interactive = featureStatus(feature) === "allowed";
           const busy = pendingId === a.id;
           const voted = votes.includes(feature);
           return (
             <li
               key={a.id}
-              className="p-4 rounded-xl border border-rule bg-card flex items-start gap-3"
+              className="p-4 rounded-xl border border-neutral-200 bg-white flex items-start gap-3"
             >
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
                   {a.title}
-                  <FeatureBadge
-                    feature={feature}
-                    userTier={userTier}
-                    voted={voted}
-                  />
+                  <FeatureBadge feature={feature} voted={voted} />
                 </div>
-                <div className="text-xs text-mute mt-1">{a.body}</div>
+                <div className="text-xs text-neutral-500 mt-1">{a.body}</div>
               </div>
               <button
                 type="button"
@@ -93,9 +86,7 @@ export function AutomationsList({
                   height: 22,
                   padding: 2,
                   opacity: interactive ? 1 : 0.4,
-                  background: a.enabled
-                    ? "var(--color-ink)"
-                    : "rgba(10,10,10,0.15)",
+                  background: a.enabled ? "#000000" : "#d4d4d4",
                   display: "flex",
                   justifyContent: a.enabled ? "flex-end" : "flex-start",
                   alignItems: "center",
@@ -103,7 +94,7 @@ export function AutomationsList({
               >
                 <span
                   aria-hidden
-                  className="block w-[18px] h-[18px] rounded-full bg-paper transition-transform"
+                  className="block w-[18px] h-[18px] rounded-full bg-white transition-transform"
                 />
               </button>
             </li>
@@ -115,19 +106,15 @@ export function AutomationsList({
           return (
             <li
               key={row.feature}
-              className="p-4 rounded-xl border border-rule bg-card flex items-start gap-3"
+              className="p-4 rounded-xl border border-neutral-200 bg-white flex items-start gap-3"
               style={{ opacity: 0.85 }}
             >
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
                   {row.title}
-                  <FeatureBadge
-                    feature={row.feature}
-                    userTier={userTier}
-                    voted={voted}
-                  />
+                  <FeatureBadge feature={row.feature} voted={voted} />
                 </div>
-                <div className="text-xs text-mute mt-1">{row.body}</div>
+                <div className="text-xs text-neutral-500 mt-1">{row.body}</div>
               </div>
               <span
                 aria-hidden
@@ -137,7 +124,7 @@ export function AutomationsList({
                   height: 22,
                   padding: 2,
                   opacity: 0.4,
-                  background: "rgba(10,10,10,0.15)",
+                  background: "#d4d4d4",
                 }}
               />
             </li>

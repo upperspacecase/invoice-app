@@ -5,15 +5,15 @@ import { listActivity } from "@/lib/server/store";
 import type { ActivityActor } from "@/lib/types";
 
 const TONE: Record<ActivityActor, string> = {
-  agent: "var(--color-accent)",
-  you: "var(--color-ink)",
-  system: "var(--color-mute)",
+  agent: "#000000",
+  you: "#000000",
+  system: "#737373",
 };
 
 const BG: Record<ActivityActor, string> = {
-  agent: "rgba(196,78,44,0.1)",
-  you: "rgba(10,10,10,0.05)",
-  system: "rgba(10,10,10,0.05)",
+  agent: "#f5f5f5",
+  you: "#f5f5f5",
+  system: "#f5f5f5",
 };
 
 export default async function ActivityPage() {
@@ -26,7 +26,7 @@ export default async function ActivityPage() {
         <Link
           href="/app"
           aria-label="Back"
-          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-ink/5 transition-colors"
+          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-neutral-100 transition-colors"
         >
           <ArrowLeft size={16} />
         </Link>
@@ -37,7 +37,7 @@ export default async function ActivityPage() {
           Activity
         </h1>
       </div>
-      <p className="text-sm text-mute mb-6">
+      <p className="text-sm text-neutral-500 mb-6">
         Everything you and your agents have done.
       </p>
 
@@ -47,7 +47,7 @@ export default async function ActivityPage() {
           return (
             <li
               key={e.id}
-              className="flex gap-3 py-3.5 border-b border-rule last:border-b-0"
+              className="flex gap-3 py-3.5 border-b border-neutral-200 last:border-b-0"
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
@@ -64,13 +64,13 @@ export default async function ActivityPage() {
                   >
                     {e.who}
                   </span>
-                  <span className="text-[11px] text-mute">
+                  <span className="text-[11px] text-neutral-500">
                     {relative(e.at)}
                   </span>
                 </div>
                 <div className="text-sm mt-1">{e.text}</div>
                 {e.meta && (
-                  <div className="text-xs text-mute mt-0.5 font-mono">
+                  <div className="text-xs text-neutral-500 mt-0.5 font-mono">
                     {e.meta}
                   </div>
                 )}

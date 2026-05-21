@@ -31,34 +31,34 @@ export function CurrencyDefaultPicker({
 
   return (
     <div>
-      <div className="border border-rule rounded-xl overflow-hidden">
+      <div className="border border-neutral-200 rounded-xl overflow-hidden">
         {CURRENCIES.map((cu, i) => (
           <button
             key={cu.code}
             type="button"
             onClick={() => pick(cu.code)}
             disabled={pending}
-            className="w-full px-4 py-3 flex items-center gap-3 text-left transition-colors hover:bg-ink/[0.03] disabled:opacity-60"
+            className="w-full px-4 py-3 flex items-center gap-3 text-left transition-colors hover:bg-neutral-50 disabled:opacity-60"
             style={{
-              borderTop: i ? "1px solid var(--color-rule)" : "none",
+              borderTop: i ? "1px solid #e5e5e5" : "none",
               background:
-                selected === cu.code ? "rgba(10,10,10,0.03)" : "transparent",
+                selected === cu.code ? "#fafafa" : "transparent",
             }}
           >
             <span className="font-mono text-sm w-8">{cu.symbol}</span>
             <span className="flex-1">
               <span className="block text-sm font-medium">{cu.code}</span>
-              <span className="block text-xs text-mute">{cu.name}</span>
+              <span className="block text-xs text-neutral-500">{cu.name}</span>
             </span>
             {selected === cu.code && <Check size={16} strokeWidth={2.5} />}
           </button>
         ))}
       </div>
-      <p className="text-xs text-mute mt-3">
+      <p className="text-xs text-neutral-500 mt-3">
         Live FX rates from exchangerate.host. New invoices default to this; you
         can override per invoice.
       </p>
-      {error && <p className="text-xs text-accent mt-1">{error}</p>}
+      {error && <p className="text-xs text-black mt-1">{error}</p>}
     </div>
   );
 }

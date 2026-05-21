@@ -94,7 +94,7 @@ export function ClientEditForm({
         <Link
           href="/app/settings/account"
           aria-label="Back"
-          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-ink/5 transition-colors"
+          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-neutral-100 transition-colors"
         >
           <ArrowLeft size={16} />
         </Link>
@@ -106,7 +106,7 @@ export function ClientEditForm({
         </h1>
       </div>
 
-      <div className="text-xs uppercase tracking-widest text-mute mb-3">
+      <div className="text-xs uppercase tracking-widest text-neutral-500 mb-3">
         Details
       </div>
       <div className="space-y-3 mb-8">
@@ -141,7 +141,7 @@ export function ClientEditForm({
         </Field>
       </div>
 
-      <div className="text-xs uppercase tracking-widest text-mute mb-3">
+      <div className="text-xs uppercase tracking-widest text-neutral-500 mb-3">
         Deliver invoices via
       </div>
       <div className="space-y-2">
@@ -161,11 +161,11 @@ export function ClientEditForm({
               className="w-full p-3 rounded-xl flex items-center gap-3 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 border: selected
-                  ? "1px solid var(--color-ink)"
-                  : "1px solid var(--color-rule)",
+                  ? "1px solid #000000"
+                  : "1px solid #e5e5e5",
                 background: selected
-                  ? "rgba(10,10,10,0.03)"
-                  : "var(--color-card)",
+                  ? "#fafafa"
+                  : "#ffffff",
               }}
             >
               <div
@@ -185,12 +185,12 @@ export function ClientEditForm({
                 <div className="text-sm font-medium">
                   {opt.label}
                   {!ready && (
-                    <span className="ml-2 text-[10px] uppercase tracking-widest text-mute">
+                    <span className="ml-2 text-[10px] uppercase tracking-widest text-neutral-500">
                       Connect first
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-mute mt-0.5 truncate">
+                <div className="text-xs text-neutral-500 mt-0.5 truncate">
                   {handleDeliveryDescription(opt.id)}
                 </div>
               </div>
@@ -198,14 +198,14 @@ export function ClientEditForm({
                 className="w-4 h-4 rounded-full flex items-center justify-center"
                 style={{
                   border: selected
-                    ? "1.5px solid var(--color-ink)"
-                    : "1.5px solid var(--color-rule)",
+                    ? "1.5px solid #000000"
+                    : "1.5px solid #e5e5e5",
                 }}
               >
                 {selected && (
                   <span
                     aria-hidden
-                    className="w-2 h-2 rounded-full bg-ink"
+                    className="w-2 h-2 rounded-full bg-black"
                   />
                 )}
               </span>
@@ -219,7 +219,7 @@ export function ClientEditForm({
         delivery === "slack" ||
         delivery === "webhook") && (
         <div className="mt-4">
-          <label className="block text-xs text-mute mb-1">
+          <label className="block text-xs text-neutral-500 mb-1">
             {delivery === "slack"
               ? "Channel"
               : delivery === "webhook"
@@ -237,7 +237,7 @@ export function ClientEditForm({
                 ? "https://example.com/hooks/invoices"
                 : "acme-studios-llc"
             }
-            className="w-full h-10 px-3 rounded-md border border-rule bg-card outline-none focus:border-ink/40 text-sm"
+            className="w-full h-10 px-3 rounded-md border border-neutral-200 bg-white outline-none focus:border-neutral-400 text-sm"
           />
         </div>
       )}
@@ -247,17 +247,17 @@ export function ClientEditForm({
           type="button"
           onClick={save}
           disabled={!dirty || pending}
-          className="px-5 h-11 rounded-md bg-ink text-paper text-sm font-medium hover:bg-ink/90 disabled:opacity-40"
+          className="px-5 h-11 rounded-md bg-black text-white text-sm font-medium hover:bg-neutral-800 disabled:opacity-40"
         >
           {pending ? "Saving…" : "Save changes"}
         </button>
         {saved && !pending && (
-          <span className="inline-flex items-center gap-1 text-xs text-[var(--color-paid)]">
+          <span className="inline-flex items-center gap-1 text-xs text-black">
             <Check size={14} strokeWidth={2.5} />
             Saved
           </span>
         )}
-        {error && <span className="text-xs text-accent">{error}</span>}
+        {error && <span className="text-xs text-black">{error}</span>}
       </div>
     </div>
   );
@@ -271,8 +271,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="pb-3 border-b border-rule">
-      <div className="text-xs text-mute mb-1">{label}</div>
+    <div className="pb-3 border-b border-neutral-200">
+      <div className="text-xs text-neutral-500 mb-1">{label}</div>
       {children}
     </div>
   );
@@ -281,16 +281,16 @@ function Field({
 function deliveryColor(c: DeliveryChannel): string {
   switch (c) {
     case "quickbooks":
-      return "#2CA01C";
+      return "#000000";
     case "xero":
-      return "#13B5EA";
+      return "#000000";
     case "slack":
-      return "#4A154B";
+      return "#000000";
     case "portal":
-      return "#c44e2c";
+      return "#000000";
     case "webhook":
-      return "#0a0a0a";
+      return "#000000";
     default:
-      return "rgba(10,10,10,0.5)";
+      return "#000000";
   }
 }

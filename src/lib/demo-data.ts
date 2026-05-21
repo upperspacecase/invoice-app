@@ -14,7 +14,6 @@ export const initialBusiness: Business = {
   payment: "Wise — IBAN GB29 NWBK 6016 1331 9268 19",
   company: "Company No. 12345678",
   currency: "USD",
-  tier: "send",
   onboarded: true,
 };
 
@@ -99,7 +98,7 @@ export const initialIntegrations: Integration[] = [
     id: "quickbooks",
     name: "QuickBooks",
     description: "Push invoices to client's QuickBooks",
-    color: "#2CA01C",
+    color: "#000000",
     connected: true,
     account: "studio-ltd-main",
     connectedAt: now - 14 * day,
@@ -108,14 +107,14 @@ export const initialIntegrations: Integration[] = [
     id: "xero",
     name: "Xero",
     description: "Push invoices to client's Xero",
-    color: "#13B5EA",
+    color: "#000000",
     connected: false,
   },
   {
     id: "slack",
     name: "Slack",
     description: "DM the invoice into a Slack channel",
-    color: "#4A154B",
+    color: "#000000",
     connected: true,
     account: "studio-ltd",
     connectedAt: now - 30 * day,
@@ -124,14 +123,14 @@ export const initialIntegrations: Integration[] = [
     id: "stripe",
     name: "Stripe",
     description: "Attach a payment link to invoices",
-    color: "#635BFF",
+    color: "#000000",
     connected: false,
   },
   {
     id: "webhook",
     name: "Webhook",
     description: "POST invoices to any URL",
-    color: "#0a0a0a",
+    color: "#000000",
     connected: false,
   },
 ];
@@ -141,8 +140,8 @@ export const initialApiKeys: ApiKey[] = [];
 export const initialAutomations: Automation[] = [
   {
     id: "auto-remind",
-    title: "Auto-remind unpaid invoices",
-    body: "Send a follow-up after 7 days, then 14, then 30.",
+    title: "Smart follow-ups",
+    body: "An AI assistant sends a gentle nudge on day 3, then 10, then 21 — warm, never pushy.",
     enabled: true,
   },
   {
@@ -244,5 +243,4 @@ export type {
   Integration,
   Invoice,
   InvoiceStatus,
-  Tier,
 } from "./types";

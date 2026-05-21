@@ -7,13 +7,10 @@ import {
   deleteApiKey,
   getBusiness,
   listApiKeys,
-  listClients,
-  listInvoices,
   markInvoicePaid,
   setAutomationEnabled,
   setDefaultCurrency,
   setIntegrationConnected,
-  setTier,
   updateBusiness,
   updateClient,
   voteForFeature,
@@ -21,8 +18,7 @@ import {
 import { sendInvoice, sendInvoiceReminder } from "@/lib/server/dispatch";
 import { requireSession } from "@/lib/server/auth";
 import { isCurrencyCode } from "@/lib/currency";
-import { FEATURES, TIER_LABEL, type FeatureId } from "@/lib/features";
-import { TIER_RANK, type Tier } from "@/lib/types";
+import { FEATURES, type FeatureId } from "@/lib/features";
 import type {
   AutomationId,
   Business,
@@ -31,50 +27,16 @@ import type {
   IntegrationId,
 } from "@/lib/types";
 
-const TIERS: ReadonlyArray<Tier> = ["send", "pro", "get-paid"];
-function isTier(v: unknown): v is Tier {
-  return typeof v === "string" && TIERS.includes(v as Tier);
-}
 function isFeatureId(v: unknown): v is FeatureId {
   return typeof v === "string" && v in FEATURES;
 }
 
-async function requireFeature(uid: string, feature: FeatureId): Promise<void> {
+// Every feature ships on the single 1% plan, so the only gate left is whether
+// the feature is actually built yet.
+function requireFeature(feature: FeatureId): void {
   const meta = FEATURES[feature];
-  const business = await getBusiness(uid);
-  if (TIER_RANK[business.tier] < TIER_RANK[meta.tier]) {
-    throw new Error(`${meta.name} is part of ${TIER_LABEL[meta.tier]}.`);
-  }
   if (!meta.built) {
     throw new Error(`${meta.name} isn't built yet — vote to prioritise.`);
-  }
-}
-
-const LIMITS = {
-  send: { clients: 1, invoicesPerMonth: 3 },
-} as const;
-
-async function requireWithinClientLimit(uid: string): Promise<void> {
-  const business = await getBusiness(uid);
-  if (business.tier !== "send") return;
-  const clients = await listClients(uid);
-  if (clients.length >= LIMITS.send.clients) {
-    throw new Error(
-      `Send tier is limited to ${LIMITS.send.clients} saved client. Upgrade to add more.`
-    );
-  }
-}
-
-async function requireWithinInvoiceLimit(uid: string): Promise<void> {
-  const business = await getBusiness(uid);
-  if (business.tier !== "send") return;
-  const invoices = await listInvoices(uid);
-  const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const recent = invoices.filter((inv) => inv.sentAt >= monthAgo);
-  if (recent.length >= LIMITS.send.invoicesPerMonth) {
-    throw new Error(
-      `Send tier is limited to ${LIMITS.send.invoicesPerMonth} invoices per month. Upgrade for unlimited.`
-    );
   }
 }
 
@@ -100,7 +62,7 @@ function refreshAll() {
 export async function setDefaultCurrencyAction(code: CurrencyCode) {
   if (!isCurrencyCode(code)) throw new Error("Bad currency");
   const { uid } = await requireSession();
-  await requireFeature(uid, "multi-currency");
+  requireFeature("multi-currency");
   const next = await setDefaultCurrency(uid, code);
   refreshAll();
   return next;
@@ -134,7 +96,6 @@ export async function createClientAction(input: {
     throw new Error("Bad delivery");
   }
   const { uid } = await requireSession();
-  await requireWithinClientLimit(uid);
   const client = await createClient(uid, input);
   refreshAll();
   return client;
@@ -184,16 +145,15 @@ export async function createInvoiceAction(input: {
   const { uid } = await requireSession();
   const business = await getBusiness(uid);
   if (input.currency && input.currency !== business.currency) {
-    await requireFeature(uid, "multi-currency");
+    requireFeature("multi-currency");
   }
   if (
     input.channelOverride &&
     input.channelOverride !== "email" &&
     input.channelOverride !== "portal"
   ) {
-    await requireFeature(uid, "integrations");
+    requireFeature("integrations");
   }
-  await requireWithinInvoiceLimit(uid);
   const inv = await sendInvoice(uid, input);
   if (!inv) throw new Error("Client not found");
   refreshAll();
@@ -223,7 +183,7 @@ export async function connectIntegrationAction(
   account?: string
 ) {
   const { uid } = await requireSession();
-  await requireFeature(uid, "integrations");
+  requireFeature("integrations");
   const next = await setIntegrationConnected(uid, id, true, account);
   if (!next) throw new Error("Unknown integration");
   refreshAll();
@@ -232,7 +192,7 @@ export async function connectIntegrationAction(
 
 export async function disconnectIntegrationAction(id: IntegrationId) {
   const { uid } = await requireSession();
-  await requireFeature(uid, "integrations");
+  requireFeature("integrations");
   const next = await setIntegrationConnected(uid, id, false);
   if (!next) throw new Error("Unknown integration");
   refreshAll();
@@ -251,7 +211,7 @@ const AUTOMATION_FEATURE: Record<AutomationId, FeatureId> = {
 export async function setAutomationAction(id: AutomationId, enabled: boolean) {
   const { uid } = await requireSession();
   const feature = AUTOMATION_FEATURE[id];
-  if (feature) await requireFeature(uid, feature);
+  if (feature) requireFeature(feature);
   const next = await setAutomationEnabled(uid, id, enabled);
   if (!next) throw new Error("Unknown automation");
   refreshAll();
@@ -263,7 +223,7 @@ export async function setAutomationAction(id: AutomationId, enabled: boolean) {
 export async function createApiKeyAction(name: string) {
   if (!name.trim()) throw new Error("Key name is required");
   const { uid } = await requireSession();
-  await requireFeature(uid, "agent-api");
+  requireFeature("agent-api");
   const created = await createApiKey(uid, name.trim());
   refreshAll();
   return created;
@@ -271,7 +231,7 @@ export async function createApiKeyAction(name: string) {
 
 export async function deleteApiKeyAction(id: string) {
   const { uid } = await requireSession();
-  await requireFeature(uid, "agent-api");
+  requireFeature("agent-api");
   const ok = await deleteApiKey(uid, id);
   if (!ok) throw new Error("Key not found");
   refreshAll();
@@ -283,15 +243,7 @@ export async function listApiKeysAction() {
   return listApiKeys(uid);
 }
 
-// ---------- tier / features ----------
-
-export async function setTierAction(tier: Tier) {
-  if (!isTier(tier)) throw new Error("Bad tier");
-  const { uid } = await requireSession();
-  const next = await setTier(uid, tier);
-  refreshAll();
-  return next;
-}
+// ---------- features ----------
 
 export async function voteForFeatureAction(id: FeatureId) {
   if (!isFeatureId(id)) throw new Error("Unknown feature");
@@ -320,24 +272,4 @@ export async function startStripeConnectAction(): Promise<
     await updateBusiness(session.uid, { stripeAccountId: flow.accountId });
   }
   return { ok: true, url: flow.onboardingUrl };
-}
-
-export async function startUpgradeCheckoutAction(
-  tier: Tier
-): Promise<{ ok: true; url: string } | { ok: false; reason: string }> {
-  if (!isTier(tier)) return { ok: false, reason: "Bad tier" };
-  if (tier === "send") return { ok: false, reason: "Send is free" };
-  const session = await requireSession();
-  const business = await getBusiness(session.uid);
-  const { createSubscriptionCheckout } = await import(
-    "@/lib/stripe/checkout"
-  );
-  const result = await createSubscriptionCheckout({
-    uid: session.uid,
-    email: business.email,
-    tier,
-    existingCustomerId: business.stripeCustomerId,
-  });
-  if (!result.ok) return { ok: false, reason: result.detail };
-  return { ok: true, url: result.url };
 }

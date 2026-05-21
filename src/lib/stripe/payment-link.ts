@@ -7,9 +7,12 @@ export type LinkResult =
   | { ok: true; url: string; stripeLinkId: string }
   | { ok: false; reason: "not-configured" | "not-connected" | "failed"; detail: string };
 
+// Our pricing: a flat 1% of every invoice paid through the platform.
+const PLATFORM_FEE_RATE = 0.01;
+
 // Creates a one-shot Stripe Payment Link on behalf of the connected account
 // so the client pays into the user's bank, not the platform's. The platform
-// can optionally take an application_fee_amount — left at 0 for v1.
+// collects its 1% as the Connect application fee on the charge.
 export async function createInvoicePaymentLink(input: {
   business: Business;
   invoice: Invoice;
@@ -57,9 +60,13 @@ export async function createInvoicePaymentLink(input: {
       { stripeAccount: accountId }
     );
 
+    const applicationFee = Math.round(unitAmount * PLATFORM_FEE_RATE);
     const link = await stripe.paymentLinks.create(
       {
         line_items: [{ price: price.id, quantity: 1 }],
+        ...(applicationFee > 0
+          ? { application_fee_amount: applicationFee }
+          : {}),
         metadata: {
           invoiceId: input.invoice.id,
         },

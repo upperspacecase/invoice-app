@@ -35,9 +35,9 @@ export function InlineEdit({
   }
 
   return (
-    <div className="pb-3 border-b border-rule">
+    <div className="pb-3 border-b border-neutral-200">
       <div className="flex items-center justify-between gap-3 mb-1">
-        <span className="text-xs text-mute">{label}</span>
+        <span className="text-xs text-neutral-500">{label}</span>
         {!editing && (
           <button
             type="button"
@@ -45,7 +45,7 @@ export function InlineEdit({
               setDraft(value);
               setEditing(true);
             }}
-            className="text-[11px] uppercase tracking-widest text-mute hover:text-ink transition-colors"
+            className="text-[11px] uppercase tracking-widest text-neutral-500 hover:text-black transition-colors"
           >
             Edit
           </button>
@@ -59,7 +59,7 @@ export function InlineEdit({
               onChange={(e) => setDraft(e.target.value)}
               autoFocus
               rows={2}
-              className="flex-1 bg-transparent outline-none border-b border-ink/30 text-sm focus:border-ink resize-none"
+              className="flex-1 bg-transparent outline-none border-b border-neutral-300 text-sm focus:border-black resize-none"
             />
           ) : (
             <input
@@ -71,14 +71,14 @@ export function InlineEdit({
                 if (e.key === "Enter") commit();
                 if (e.key === "Escape") setEditing(false);
               }}
-              className="flex-1 bg-transparent outline-none border-b border-ink/30 text-sm focus:border-ink"
+              className="flex-1 bg-transparent outline-none border-b border-neutral-300 text-sm focus:border-black"
             />
           )}
           <button
             type="button"
             onClick={commit}
             disabled={pending}
-            className="text-xs px-2 py-1 rounded-md bg-ink text-paper hover:bg-ink/90 disabled:opacity-50"
+            className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-neutral-800 disabled:opacity-50"
           >
             {pending ? "…" : "Save"}
           </button>
@@ -86,7 +86,7 @@ export function InlineEdit({
             type="button"
             onClick={() => setEditing(false)}
             disabled={pending}
-            className="text-xs px-2 py-1 text-mute hover:text-ink"
+            className="text-xs px-2 py-1 text-neutral-500 hover:text-black"
           >
             Cancel
           </button>
@@ -94,7 +94,7 @@ export function InlineEdit({
       ) : (
         <div className="text-sm break-words">{value}</div>
       )}
-      {error && <div className="mt-1 text-[11px] text-accent">{error}</div>}
+      {error && <div className="mt-1 text-[11px] text-black">{error}</div>}
     </div>
   );
 }

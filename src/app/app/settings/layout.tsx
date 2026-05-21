@@ -13,7 +13,7 @@ export default function SettingsLayout({
         <Link
           href="/app"
           aria-label="Back"
-          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-ink/5 transition-colors"
+          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-neutral-100 transition-colors"
         >
           <ArrowLeft size={16} />
         </Link>

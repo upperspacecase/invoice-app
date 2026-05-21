@@ -111,7 +111,7 @@ export function SignInForm() {
 
   if (status.kind === "completing" || status.kind === "redirecting") {
     return (
-      <div className="text-sm text-mute">
+      <div className="text-sm text-neutral-500">
         {status.kind === "completing"
           ? "Finishing sign-in…"
           : "Signed in. Redirecting…"}
@@ -129,7 +129,7 @@ export function SignInForm() {
         <button
           type="button"
           onClick={() => setStatus({ kind: "idle" })}
-          className="text-xs text-mute underline underline-offset-4 mt-3"
+          className="text-xs text-neutral-500 underline underline-offset-4 mt-3"
         >
           Use a different email
         </button>
@@ -142,7 +142,7 @@ export function SignInForm() {
       <div>
         <label
           htmlFor="email"
-          className="block text-xs uppercase tracking-widest text-mute mb-2"
+          className="block text-xs uppercase tracking-widest text-neutral-500 mb-2"
         >
           Email
         </label>
@@ -154,35 +154,35 @@ export function SignInForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@studio.co"
-          className="w-full h-12 px-4 rounded-md border border-rule bg-card outline-none focus:border-ink/40 text-sm"
+          className="w-full h-12 px-4 rounded-md border border-neutral-200 bg-white outline-none focus:border-neutral-400 text-sm"
         />
       </div>
 
       <button
         type="submit"
         disabled={status.kind === "sending" || !email.trim()}
-        className="w-full h-12 rounded-md bg-ink text-paper text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+        className="w-full h-12 rounded-md bg-black text-white text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50"
       >
         {status.kind === "sending" ? "Sending…" : "Continue"}
       </button>
 
-      <div className="flex items-center gap-3 text-[11px] text-mute uppercase tracking-widest">
-        <span className="flex-1 h-px bg-rule" />
+      <div className="flex items-center gap-3 text-[11px] text-neutral-500 uppercase tracking-widest">
+        <span className="flex-1 h-px bg-neutral-200" />
         or
-        <span className="flex-1 h-px bg-rule" />
+        <span className="flex-1 h-px bg-neutral-200" />
       </div>
 
       <button
         type="button"
         onClick={handleGoogle}
         disabled={status.kind === "sending"}
-        className="w-full h-12 rounded-md border border-rule text-sm font-medium hover:border-ink/40 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full h-12 rounded-md border border-neutral-200 text-sm font-medium hover:border-neutral-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
         Continue with Google
       </button>
 
       {status.kind === "error" && (
-        <div className="text-xs text-accent">{status.message}</div>
+        <div className="text-xs text-black">{status.message}</div>
       )}
     </form>
   );

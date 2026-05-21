@@ -45,7 +45,7 @@ export function NewInvoiceWizard({
   featureVotes: FeatureId[];
 }) {
   const currencyUnlocked =
-    featureStatus("multi-currency", business.tier) === "allowed";
+    featureStatus("multi-currency") === "allowed";
   const currencyVoted = featureVotes.includes("multi-currency");
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
@@ -114,7 +114,7 @@ export function NewInvoiceWizard({
           type="button"
           onClick={handleBack}
           aria-label="Back"
-          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-ink/5 transition-colors"
+          className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-neutral-100 transition-colors"
         >
           <ArrowLeft size={16} />
         </button>
@@ -126,7 +126,7 @@ export function NewInvoiceWizard({
               style={{
                 width: i === step ? 28 : 10,
                 background:
-                  i <= step ? "var(--color-ink)" : "var(--color-rule)",
+                  i <= step ? "#000000" : "#e5e5e5",
               }}
             />
           ))}
@@ -142,7 +142,6 @@ export function NewInvoiceWizard({
           setDraft={setDraft}
           currencyUnlocked={currencyUnlocked}
           currencyVoted={currencyVoted}
-          userTier={business.tier}
           onPickCurrency={() => currencyUnlocked && setShowCurrency(true)}
           onNext={() => setStep(2)}
         />
@@ -201,7 +200,7 @@ function StepPickClient({
       >
         Who&apos;s it for?
       </h1>
-      <p className="text-sm text-mute mt-2 mb-8">
+      <p className="text-sm text-neutral-500 mt-2 mb-8">
         Pick a saved client to continue.
       </p>
       <ul className="space-y-2">
@@ -210,13 +209,13 @@ function StepPickClient({
             <button
               type="button"
               onClick={() => onPick(c)}
-              className="w-full p-4 rounded-xl bg-card border border-rule flex items-center justify-between hover:border-ink/30 transition-colors text-left"
+              className="w-full p-4 rounded-xl bg-white border border-neutral-200 flex items-center justify-between hover:border-neutral-400 transition-colors text-left"
             >
               <div>
                 <div className="text-sm font-medium">{c.name}</div>
-                <div className="text-xs text-mute mt-0.5">{c.email}</div>
+                <div className="text-xs text-neutral-500 mt-0.5">{c.email}</div>
               </div>
-              <ChevronRight size={16} className="text-ink/40" />
+              <ChevronRight size={16} className="text-neutral-400" />
             </button>
           </li>
         ))}
@@ -230,7 +229,6 @@ function StepAmount({
   setDraft,
   currencyUnlocked,
   currencyVoted,
-  userTier,
   onPickCurrency,
   onNext,
 }: {
@@ -238,7 +236,6 @@ function StepAmount({
   setDraft: React.Dispatch<React.SetStateAction<Draft>>;
   currencyUnlocked: boolean;
   currencyVoted: boolean;
-  userTier: Business["tier"];
   onPickCurrency: () => void;
   onNext: () => void;
 }) {
@@ -253,13 +250,13 @@ function StepAmount({
       >
         How much?
       </h1>
-      <p className="text-sm text-mute mt-2 mb-8">
+      <p className="text-sm text-neutral-500 mt-2 mb-8">
         For {draft.client?.name}
       </p>
 
       <div className="flex items-baseline gap-2 mb-4">
         <span
-          className="font-mono text-5xl text-ink/70"
+          className="font-mono text-5xl text-neutral-600"
           style={{ fontWeight: 300 }}
         >
           {symbol}
@@ -286,28 +283,24 @@ function StepAmount({
           type="button"
           onClick={onPickCurrency}
           disabled={!currencyUnlocked}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-rule text-sm transition-colors disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-neutral-200 text-sm transition-colors disabled:cursor-not-allowed"
           style={{
-            borderColor: "var(--color-rule)",
+            borderColor: "#e5e5e5",
             opacity: currencyUnlocked ? 1 : 0.6,
           }}
         >
           <Globe size={14} />
           <span className="font-mono">{draft.currency}</span>
           {currencyUnlocked && (
-            <span className="text-xs text-mute">· change</span>
+            <span className="text-xs text-neutral-500">· change</span>
           )}
         </button>
         {!currencyUnlocked && (
-          <FeatureBadge
-            feature="multi-currency"
-            userTier={userTier}
-            voted={currencyVoted}
-          />
+          <FeatureBadge feature="multi-currency" voted={currencyVoted} />
         )}
       </div>
 
-      <div className="text-xs uppercase tracking-widest text-mute mb-2">
+      <div className="text-xs uppercase tracking-widest text-neutral-500 mb-2">
         For
       </div>
       <input
@@ -317,14 +310,14 @@ function StepAmount({
           setDraft((d) => ({ ...d, description: e.target.value }))
         }
         placeholder="e.g. Strategy session, April"
-        className="w-full bg-transparent outline-none border-b border-rule pb-2 text-base focus:border-ink/40"
+        className="w-full bg-transparent outline-none border-b border-neutral-200 pb-2 text-base focus:border-neutral-400"
       />
 
       <button
         type="button"
         onClick={onNext}
         disabled={!valid}
-        className="mt-12 w-full h-14 rounded-xl bg-ink text-paper flex items-center justify-center gap-2 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="mt-12 w-full h-14 rounded-xl bg-black text-white flex items-center justify-center gap-2 text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
         Preview
         <ArrowRight size={16} />
@@ -379,28 +372,28 @@ function StepPreview({
         {callout.text}
       </div>
 
-      <div className="bg-card border border-rule rounded-2xl p-6">
+      <div className="bg-white border border-neutral-200 rounded-2xl p-6">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <div className="text-xs uppercase tracking-widest text-mute">
+            <div className="text-xs uppercase tracking-widest text-neutral-500">
               Invoice
             </div>
             <div className="font-mono text-lg mt-1">DRAFT</div>
           </div>
-          <div className="text-xs text-mute">Due in 14 days</div>
+          <div className="text-xs text-neutral-500">Due in 14 days</div>
         </div>
 
         <Block label="From">
           {business.name}
-          <div className="text-mute text-sm">{business.email}</div>
+          <div className="text-neutral-500 text-sm">{business.email}</div>
         </Block>
 
         <Block label="To">
           {draft.client?.name}
-          <div className="text-mute text-sm">{draft.client?.email}</div>
+          <div className="text-neutral-500 text-sm">{draft.client?.email}</div>
         </Block>
 
-        <div className="border-t border-b border-rule py-3 my-4 flex justify-between items-center">
+        <div className="border-t border-b border-neutral-200 py-3 my-4 flex justify-between items-center">
           <span className="text-sm">
             {draft.description || "Services rendered"}
           </span>
@@ -410,7 +403,7 @@ function StepPreview({
         </div>
 
         <div className="flex justify-between items-baseline mt-4">
-          <span className="text-xs uppercase tracking-widest text-mute">
+          <span className="text-xs uppercase tracking-widest text-neutral-500">
             Total
           </span>
           <span className="font-mono text-2xl">
@@ -418,20 +411,20 @@ function StepPreview({
           </span>
         </div>
 
-        <div className="mt-5 pt-3 border-t border-rule text-xs text-mute">
+        <div className="mt-5 pt-3 border-t border-neutral-200 text-xs text-neutral-500">
           Pay via: {business.payment}
         </div>
       </div>
 
       {error && (
-        <div className="mt-4 text-xs text-accent">{error}</div>
+        <div className="mt-4 text-xs text-black">{error}</div>
       )}
 
       <button
         type="button"
         onClick={onSend}
         disabled={pending}
-        className="mt-8 w-full h-14 rounded-xl bg-ink text-paper flex items-center justify-center gap-2 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+        className="mt-8 w-full h-14 rounded-xl bg-black text-white flex items-center justify-center gap-2 text-sm font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50"
       >
         <Send size={14} />
         {pending ? "Sending…" : `Send via ${channelLabel(channel)}`}
@@ -467,43 +460,28 @@ function channelCallout(
   if (!ok) {
     return {
       text: `${channelLabel(channel)} not connected — will fall back to email`,
-      bg: "rgba(196, 78, 44, 0.08)",
-      fg: "#a73e22",
-      swatch: "#c44e2c",
+      bg: "#f5f5f5",
+      fg: "#000000",
+      swatch: "#000000",
       initial: "!",
     };
   }
   if (channel === "email") {
     return {
       text: `Will email this to ${client.email}`,
-      bg: "rgba(10,10,10,0.05)",
-      fg: "var(--color-ink)",
+      bg: "#f5f5f5",
+      fg: "#000000",
       swatch: "#0a0a0a",
       initial: "@",
     };
   }
   return {
     text: `Will deliver via ${channelLabel(channel)} → ${handle}`,
-    bg: "rgba(44,160,28,0.08)",
-    fg: "#1e6f12",
-    swatch: channelSwatch(channel),
+    bg: "#f5f5f5",
+    fg: "#000000",
+    swatch: "#000000",
     initial: channelLabel(channel)[0],
   };
-}
-
-function channelSwatch(c: DeliveryChannel): string {
-  switch (c) {
-    case "quickbooks":
-      return "#2CA01C";
-    case "xero":
-      return "#13B5EA";
-    case "slack":
-      return "#4A154B";
-    case "portal":
-      return "#c44e2c";
-    default:
-      return "#0a0a0a";
-  }
 }
 
 function Block({
@@ -515,7 +493,7 @@ function Block({
 }) {
   return (
     <div className="mb-4">
-      <div className="text-xs uppercase tracking-widest text-mute mb-1">
+      <div className="text-xs uppercase tracking-widest text-neutral-500 mb-1">
         {label}
       </div>
       <div className="text-sm">{children}</div>
@@ -547,8 +525,8 @@ function StepSent({
   return (
     <div className="flex flex-col items-center justify-center pt-12 pb-20 text-center">
       <div
-        className="w-20 h-20 rounded-full flex items-center justify-center mb-6 text-paper"
-        style={{ background: "var(--color-paid)" }}
+        className="w-20 h-20 rounded-full flex items-center justify-center mb-6 text-white"
+        style={{ background: "#000000" }}
       >
         <Check size={32} strokeWidth={2.5} />
       </div>
@@ -558,14 +536,14 @@ function StepSent({
       >
         Sent.
       </h1>
-      <p className="text-sm text-mute mt-3 mb-10 max-w-xs">{message}</p>
+      <p className="text-sm text-neutral-500 mt-3 mb-10 max-w-xs">{message}</p>
       <div className="flex items-center gap-3">
         {invoiceId && (
           <a
             href={`/api/v1/invoices/${invoiceId}/pdf`}
             target="_blank"
             rel="noreferrer"
-            className="px-5 py-2.5 rounded-md border border-rule text-sm hover:border-ink/40"
+            className="px-5 py-2.5 rounded-md border border-neutral-200 text-sm hover:border-neutral-400"
           >
             View PDF
           </a>
@@ -573,7 +551,7 @@ function StepSent({
         <button
           type="button"
           onClick={onDone}
-          className="px-5 py-2.5 rounded-md bg-ink/[0.06] text-sm hover:bg-ink/10 transition-colors"
+          className="px-5 py-2.5 rounded-md bg-neutral-100 text-sm hover:bg-neutral-200 transition-colors"
         >
           Done
         </button>
@@ -597,15 +575,15 @@ function CurrencyPickerSheet({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm bg-paper rounded-2xl border border-rule overflow-hidden shadow-xl"
+        className="w-full max-w-sm bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-5 py-4 border-b border-rule flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-neutral-200 flex items-center justify-between">
           <h2 className="text-sm font-medium">Currency</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-mute text-xs hover:text-ink"
+            className="text-neutral-500 text-xs hover:text-black"
           >
             Close
           </button>
@@ -616,14 +594,14 @@ function CurrencyPickerSheet({
               <button
                 type="button"
                 onClick={() => onPick(cu.code)}
-                className={`w-full px-5 py-3 flex items-center gap-3 text-left hover:bg-ink/5 transition-colors ${
-                  selected === cu.code ? "bg-ink/[0.03]" : ""
+                className={`w-full px-5 py-3 flex items-center gap-3 text-left hover:bg-neutral-100 transition-colors ${
+                  selected === cu.code ? "bg-neutral-50" : ""
                 }`}
               >
                 <span className="font-mono text-sm w-8">{cu.symbol}</span>
                 <span className="flex-1">
                   <span className="block text-sm font-medium">{cu.code}</span>
-                  <span className="block text-xs text-mute">{cu.name}</span>
+                  <span className="block text-xs text-neutral-500">{cu.name}</span>
                 </span>
                 {selected === cu.code && (
                   <Check size={16} strokeWidth={2.5} />

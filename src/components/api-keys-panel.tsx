@@ -54,14 +54,14 @@ export function ApiKeysPanel({
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-xs uppercase tracking-widest text-mute">
+        <div className="text-xs uppercase tracking-widest text-neutral-500">
           API keys
         </div>
         {!creating && !locked && (
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="text-xs px-3 py-1.5 rounded-md bg-ink text-paper inline-flex items-center gap-1.5 hover:bg-ink/90"
+            className="text-xs px-3 py-1.5 rounded-md bg-black text-white inline-flex items-center gap-1.5 hover:bg-neutral-800"
           >
             <Plus size={13} />
             New key
@@ -70,7 +70,7 @@ export function ApiKeysPanel({
       </div>
 
       {creating && (
-        <div className="p-3 rounded-xl border border-rule bg-card mb-3">
+        <div className="p-3 rounded-xl border border-neutral-200 bg-white mb-3">
           <input
             type="text"
             placeholder="e.g. Claude agent"
@@ -84,7 +84,7 @@ export function ApiKeysPanel({
                 setName("");
               }
             }}
-            className="w-full h-9 px-2 outline-none bg-transparent border-b border-rule focus:border-ink/40 text-sm"
+            className="w-full h-9 px-2 outline-none bg-transparent border-b border-neutral-200 focus:border-neutral-400 text-sm"
           />
           <div className="flex gap-2 mt-3 justify-end">
             <button
@@ -93,7 +93,7 @@ export function ApiKeysPanel({
                 setCreating(false);
                 setName("");
               }}
-              className="text-xs px-3 py-1.5 text-mute hover:text-ink"
+              className="text-xs px-3 py-1.5 text-neutral-500 hover:text-black"
             >
               Cancel
             </button>
@@ -101,7 +101,7 @@ export function ApiKeysPanel({
               type="button"
               onClick={submit}
               disabled={pending || !name.trim()}
-              className="text-xs px-3 py-1.5 rounded-md bg-ink text-paper disabled:opacity-40"
+              className="text-xs px-3 py-1.5 rounded-md bg-black text-white disabled:opacity-40"
             >
               {pending ? "Creating…" : "Create"}
             </button>
@@ -110,8 +110,8 @@ export function ApiKeysPanel({
       )}
 
       {revealed && (
-        <div className="p-4 rounded-xl border border-ink bg-ink/[0.03] mb-3">
-          <div className="text-xs uppercase tracking-widest text-mute mb-2">
+        <div className="p-4 rounded-xl border border-black bg-neutral-50 mb-3">
+          <div className="text-xs uppercase tracking-widest text-neutral-500 mb-2">
             Copy this now — it won&apos;t be shown again
           </div>
           <div className="flex items-center gap-2">
@@ -129,7 +129,7 @@ export function ApiKeysPanel({
                   /* ignore */
                 }
               }}
-              className="text-xs px-2 py-1 rounded-md bg-ink text-paper hover:bg-ink/90"
+              className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-neutral-800"
             >
               {copied ? "Copied" : "Copy"}
             </button>
@@ -137,17 +137,17 @@ export function ApiKeysPanel({
           <button
             type="button"
             onClick={() => setRevealed(null)}
-            className="text-xs text-mute mt-3 hover:text-ink"
+            className="text-xs text-neutral-500 mt-3 hover:text-black"
           >
             Done
           </button>
         </div>
       )}
 
-      {error && <div className="text-xs text-accent mb-3">{error}</div>}
+      {error && <div className="text-xs text-black mb-3">{error}</div>}
 
       {keys.length === 0 && !creating && (
-        <div className="p-6 rounded-xl border border-rule bg-card text-center text-xs text-mute">
+        <div className="p-6 rounded-xl border border-neutral-200 bg-white text-center text-xs text-neutral-500">
           No API keys yet.
         </div>
       )}
@@ -156,16 +156,16 @@ export function ApiKeysPanel({
         {keys.map((k) => (
           <div
             key={k.id}
-            className="p-4 rounded-xl border border-rule bg-card"
+            className="p-4 rounded-xl border border-neutral-200 bg-white"
           >
             <div className="flex justify-between items-start gap-3">
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium">{k.name}</div>
-                <div className="font-mono text-xs text-mute mt-1">
+                <div className="font-mono text-xs text-neutral-500 mt-1">
                   {k.prefix}
                 </div>
               </div>
-              <div className="flex gap-1 text-mute">
+              <div className="flex gap-1 text-neutral-500">
                 <button
                   type="button"
                   aria-label="Copy prefix"
@@ -176,7 +176,7 @@ export function ApiKeysPanel({
                       /* ignore */
                     }
                   }}
-                  className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-ink/5"
+                  className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-neutral-100"
                 >
                   <Copy size={14} />
                 </button>
@@ -185,16 +185,16 @@ export function ApiKeysPanel({
                   aria-label="Revoke"
                   onClick={() => remove(k.id)}
                   disabled={deletingId === k.id}
-                  className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-ink/5 disabled:opacity-40"
+                  className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-neutral-100 disabled:opacity-40"
                 >
                   <Trash2 size={14} />
                 </button>
               </div>
             </div>
-            <div className="flex gap-4 mt-3 text-xs text-mute">
+            <div className="flex gap-4 mt-3 text-xs text-neutral-500">
               <span>
                 Last used{" "}
-                <span className="text-ink">
+                <span className="text-black">
                   {k.lastUsedAt
                     ? new Date(k.lastUsedAt).toLocaleString()
                     : "Never"}

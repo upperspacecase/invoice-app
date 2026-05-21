@@ -28,11 +28,11 @@ export function AppHeader() {
   }
 
   return (
-    <header className="px-6 sm:px-10 lg:px-14 py-5 border-b border-rule">
+    <header className="px-6 sm:px-10 lg:px-14 py-5 border-b border-neutral-200">
       <div className="max-w-2xl mx-auto flex items-center justify-between">
         <Link
           href="/app"
-          className="text-sm font-mono tracking-tight text-ink"
+          className="text-sm font-mono tracking-tight text-black"
         >
           invoice-app
         </Link>
@@ -40,7 +40,7 @@ export function AppHeader() {
           <Link
             href="/app/settings"
             aria-label="Settings"
-            className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-ink/5 transition-colors"
+            className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-neutral-100 transition-colors"
           >
             <Settings size={16} />
           </Link>
@@ -49,14 +49,14 @@ export function AppHeader() {
             onClick={signOut}
             disabled={pending}
             aria-label="Sign out"
-            className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-ink/5 transition-colors disabled:opacity-50"
+            className="w-9 h-9 rounded-md flex items-center justify-center hover:bg-neutral-100 transition-colors disabled:opacity-50"
           >
             <LogOut size={16} />
           </button>
         </div>
       </div>
       {error && (
-        <div className="text-[11px] text-accent text-center mt-1">{error}</div>
+        <div className="text-[11px] text-black text-center mt-1">{error}</div>
       )}
     </header>
   );

@@ -148,7 +148,9 @@ export async function getBusiness(uid: string): Promise<Business> {
     payment: data.payment ?? initialBusiness.payment,
     company: data.company ?? initialBusiness.company,
     currency: data.currency ?? initialBusiness.currency,
-    tier: data.tier ?? "send",
+    // Free + 1% model: everything's free, so everyone gets full feature
+    // access. The only paid thing is the 1% on a paid invoice (Stripe).
+    tier: data.tier ?? "get-paid",
     brandColor:
       typeof data.brandColor === "string" ? data.brandColor : undefined,
     logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : undefined,

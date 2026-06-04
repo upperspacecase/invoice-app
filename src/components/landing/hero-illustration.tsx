@@ -128,22 +128,22 @@ export function HeroIllustration() {
             <span className="text-xs text-mute w-10 shrink-0">From</span>
             <span
               className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white"
-              style={{ background: "#6b8cff" }}
+              style={{ background: "var(--color-paid)" }}
               aria-hidden
             >
-              DS
+              AE
             </span>
-            <span className="text-sm">Design Studio</span>
+            <span className="text-sm">Apex Electrical</span>
           </div>
           <div className="flex items-center gap-2.5">
             <span className="text-xs text-mute w-10 shrink-0">To</span>
-            <span className="text-sm">Acme Co.</span>
+            <span className="text-sm">Harbour Property</span>
           </div>
         </div>
 
         <div className="mt-5">
-          <div className="font-serif text-3xl" style={{ fontWeight: 600 }}>
-            $1,250.00
+          <div className="font-mono text-3xl" style={{ fontWeight: 600 }}>
+            $1,850.00
           </div>
           <div className="text-xs text-mute mt-1">Due Apr 30, 2026</div>
         </div>
@@ -202,9 +202,9 @@ export function HeroIllustration() {
           icon={<Bell size={14} strokeWidth={2.2} />}
           iconBg="#fde68a"
           iconColor="#a06b00"
-          title="Reminder sent"
+          title="Nudge followed up"
           time="Apr 23, 9:00 AM"
-          subline="Friendly nudge"
+          subline="Kind reminder, from your assistant"
         />
         <DashedConnector />
         <TimelineCard
@@ -213,7 +213,7 @@ export function HeroIllustration() {
           iconColor="#1e6f3a"
           title="Paid"
           time="Apr 24, 2:31 PM"
-          accent="$1,250.00"
+          accent="$1,850.00"
         />
       </div>
 
@@ -230,9 +230,9 @@ export function HeroIllustration() {
           icon={<Bell size={14} strokeWidth={2.2} />}
           iconBg="#fde68a"
           iconColor="#a06b00"
-          title="Reminder sent"
+          title="Nudge followed up"
           time="Apr 23, 9:00 AM"
-          subline="Friendly nudge"
+          subline="Kind reminder, from your assistant"
         />
         <TimelineCard
           icon={<Check size={14} strokeWidth={3} />}
@@ -240,7 +240,7 @@ export function HeroIllustration() {
           iconColor="#1e6f3a"
           title="Paid"
           time="Apr 24, 2:31 PM"
-          accent="$1,250.00"
+          accent="$1,850.00"
         />
       </div>
     </div>

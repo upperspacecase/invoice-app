@@ -141,29 +141,32 @@ export async function sendReminderEmail(input: {
   }
 
   const { business, invoice } = input;
-  const subject = `Reminder: invoice ${invoice.id} from ${business.name}`;
+  const subject = `Friendly reminder: invoice ${invoice.id} from ${business.name}`;
   const total = formatMoney(invoice.amount, invoice.currency, {
     withCode: true,
   });
   const lines = [
     `Hi ${invoice.clientName.split(/[\s,]+/)[0] || "there"},`,
     "",
-    `A quick nudge on invoice ${invoice.id} for ${total} — it's still showing unpaid on my end.`,
+    `I'm Nudge, ${business.name}'s invoicing assistant — I keep things tidy on their behalf so nothing slips through.`,
+    "",
+    `Invoice ${invoice.id} for ${total} is still showing as unpaid. No stress at all — here's an easy way to sort it:`,
     "",
     input.paymentLinkUrl ? `Pay now: ${input.paymentLinkUrl}` : "",
     "",
-    `Pay via: ${business.payment}`,
+    `Or pay direct: ${business.payment}`,
     "",
-    `Reply if you need it sent again or if something needs adjusting.`,
+    `If it's already on its way, or something needs adjusting, just reply and I'll pass it straight on.`,
     "",
-    `— ${business.name}`,
+    `Thanks so much,`,
+    `Nudge — on behalf of ${business.name}`,
   ]
     .filter((l) => l !== "")
     .join("\n");
 
   try {
     const result = await resend.emails.send({
-      from: `${business.name} <${from}>`,
+      from: `${business.name} via Nudge <${from}>`,
       to: invoice.clientEmail,
       replyTo: input.replyTo || business.email,
       subject,
@@ -201,8 +204,8 @@ function textToHtml(text: string, accent?: string): string {
   const body = escapeHtml(text)
     .replace(
       /(https?:\/\/[^\s]+)/g,
-      `<a href="$1" style="color:${accent || "#0a0a0a"};text-decoration:underline">$1</a>`
+      `<a href="$1" style="color:${accent || "#1f8f50"};text-decoration:underline">$1</a>`
     )
     .replace(/\n/g, "<br/>");
-  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#0a0a0a;max-width:560px;margin:0 auto;padding:24px">${body}</div>`;
+  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#1c1f1a;max-width:560px;margin:0 auto;padding:24px">${body}</div>`;
 }

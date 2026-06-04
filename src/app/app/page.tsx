@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Plus } from "lucide-react";
 import { requireOnboardedSession } from "@/lib/server/auth";
 import {
@@ -89,6 +90,25 @@ export default async function LedgerPage() {
         </Link>
       </div>
 
+      {invoices.length === 0 && (
+        <div className="flex flex-col items-center text-center py-12">
+          <Image
+            src="/brand/nudge-mascot.jpeg"
+            alt="Nudge, your invoicing assistant"
+            width={168}
+            height={168}
+            className="rounded-3xl"
+          />
+          <div className="font-display text-xl mt-5" style={{ fontWeight: 700 }}>
+            No invoices yet. Let&apos;s get you paid.
+          </div>
+          <div className="text-sm text-mute mt-1 max-w-xs">
+            Send your first one. If it goes quiet, I&apos;ll follow up with the
+            client for you.
+          </div>
+        </div>
+      )}
+
       <ul>
         {invoices.map((inv) => (
           <li
@@ -114,7 +134,7 @@ export default async function LedgerPage() {
                   color:
                     inv.status === "paid"
                       ? "var(--color-paid)"
-                      : "var(--color-accent)",
+                      : "var(--color-mute)",
                 }}
               >
                 {inv.status}

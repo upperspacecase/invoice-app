@@ -1,5 +1,5 @@
-// Nudge wordmark — Fraunces 900 with soft terminals + 5-ray yellow
-// sunburst fan radiating from a point above the "u". Two sizes: "lg"
+// Nudge wordmark — Bricolage Grotesque 800 + 5-ray green spark fan
+// radiating from a point above the "u". Two sizes: "lg"
 // (landing nav, prominent), "sm" (signin/app header, footer).
 
 type Size = "lg" | "sm";
@@ -30,13 +30,12 @@ export function Wordmark({ size = "lg" }: { size?: Size }) {
         }}
       />
       <span
-        className="font-serif"
+        className="font-display"
         style={{
-          fontWeight: 900,
+          fontWeight: 800,
           fontSize: s.font,
           letterSpacing: "-0.035em",
           lineHeight: 1,
-          fontVariationSettings: '"opsz" 144, "SOFT" 100, "WONK" 0',
         }}
       >
         Nudge
@@ -67,7 +66,7 @@ function SunburstFan({
       style={style}
     >
       <g
-        stroke="#f3b81f"
+        stroke="var(--color-paid)"
         strokeWidth="2.4"
         strokeLinecap="round"
         fill="none"

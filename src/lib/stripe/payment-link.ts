@@ -7,9 +7,18 @@ export type LinkResult =
   | { ok: true; url: string; stripeLinkId: string }
   | { ok: false; reason: "not-configured" | "not-connected" | "failed"; detail: string };
 
-// Creates a one-shot Stripe Payment Link on behalf of the connected account
-// so the client pays into the user's bank, not the platform's. The platform
-// can optionally take an application_fee_amount — left at 0 for v1.
+// Nudge's whole price: 1% of an invoice, taken only when it actually gets
+// paid, capped so a big month doesn't punish the tradie. Validate the cap on
+// real users before treating these as final.
+const PLATFORM_FEE_RATE = 0.01; // 1%
+const PLATFORM_FEE_CAP_MAJOR = 20; // cap per invoice, in major currency units
+
+// Creates a one-shot Stripe Payment Link on the connected account so the
+// client pays into the tradie's bank, not the platform's. We attach an
+// application_fee_amount = 1% (capped): it comes off automatically whatever
+// method the client uses on the link — card or pay-by-bank — so there is never
+// a separate bill. Which methods appear on the link is governed by what the
+// connected account has enabled in its Stripe dashboard.
 export async function createInvoicePaymentLink(input: {
   business: Business;
   invoice: Invoice;
@@ -33,8 +42,13 @@ export async function createInvoicePaymentLink(input: {
   try {
     const meta = currencyMeta(input.invoice.currency);
     // unit_amount is minor units; JPY has 0 decimals.
-    const unitAmount = Math.round(
-      input.invoice.amount * Math.pow(10, meta.decimals)
+    const scale = Math.pow(10, meta.decimals);
+    const unitAmount = Math.round(input.invoice.amount * scale);
+
+    // 1% of the invoice, capped, in minor units. Omitted when it rounds to 0.
+    const feeMinor = Math.min(
+      Math.round(input.invoice.amount * PLATFORM_FEE_RATE * scale),
+      Math.round(PLATFORM_FEE_CAP_MAJOR * scale)
     );
 
     const product = await stripe.products.create(
@@ -60,6 +74,9 @@ export async function createInvoicePaymentLink(input: {
     const link = await stripe.paymentLinks.create(
       {
         line_items: [{ price: price.id, quantity: 1 }],
+        ...(feeMinor > 0
+          ? { application_fee_amount: feeMinor }
+          : {}),
         metadata: {
           invoiceId: input.invoice.id,
         },

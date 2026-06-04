@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
@@ -546,17 +547,18 @@ function StepSent({
       : `Pushed to ${clientName}'s ${channelLabel(channel)}${deliveryHandle ? ` → ${deliveryHandle}` : ""}`;
   return (
     <div className="flex flex-col items-center justify-center pt-12 pb-20 text-center">
-      <div
-        className="w-20 h-20 rounded-full flex items-center justify-center mb-6 text-paper"
-        style={{ background: "var(--color-paid)" }}
-      >
-        <Check size={32} strokeWidth={2.5} />
-      </div>
+      <Image
+        src="/brand/nudge-mascot.jpeg"
+        alt="Nudge, your invoicing assistant"
+        width={160}
+        height={160}
+        className="rounded-3xl mb-6"
+      />
       <h1
-        className="font-serif text-4xl sm:text-5xl leading-tight"
-        style={{ fontWeight: 400, fontStyle: "italic" }}
+        className="font-display text-4xl sm:text-5xl leading-tight"
+        style={{ fontWeight: 800 }}
       >
-        Sent.
+        Sent it. I&apos;ll chase &apos;em.
       </h1>
       <p className="text-sm text-mute mt-3 mb-10 max-w-xs">{message}</p>
       <div className="flex items-center gap-3">

@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces, JetBrains_Mono } from "next/font/google";
+import {
+  DM_Sans,
+  Bricolage_Grotesque,
+  JetBrains_Mono,
+} from "next/font/google";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -7,10 +11,9 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -19,9 +22,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nudge — invoice once, stop chasing",
+  title: "Nudge — free invoicing, 1% to get paid",
   description:
-    "Send a clean invoice in seconds. Automatic reminders follow up until it's paid.",
+    "Send invoices free. Nudge chases them until you're paid — and takes 1% only when the money lands.",
 };
 
 export default function RootLayout({
@@ -32,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}
+      className={`${dmSans.variable} ${bricolage.variable} ${jetbrainsMono.variable}`}
     >
       <body>{children}</body>
     </html>

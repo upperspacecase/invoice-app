@@ -1,27 +1,36 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-paper: #ffffff;
+  /* Nudge brand — see DESIGN.md. Ink + warm paper + Paid Green + hi-vis spice. */
+  --color-paper: #fbfaf7; /* warm off-white, NOT cream */
   --color-card: #ffffff;
-  --color-ink: #0a0a0a;
-  --color-mute: rgba(10, 10, 10, 0.55);
-  --color-rule: rgba(10, 10, 10, 0.1);
-  --color-accent: #c44e2c;
-  --color-paid: #2d7a4f;
+  --color-ink: #1c1f1a; /* warm near-black */
+  --color-mute: rgba(28, 31, 26, 0.58);
+  --color-rule: rgba(28, 31, 26, 0.12);
 
-  --color-cream: #fdf8ef;
-  --color-cream-deep: #f7eed8;
-  --color-coral: #ff6b4a;
-  --color-coral-soft: #ffa389;
-  --color-coral-deep: #e85a3a;
-  --color-sun: #fde68a;
-  --color-mint: #bef0d0;
-  --color-sky: #cfe4ff;
-  --color-iris: #e9d8fd;
-  --color-blush: #fde0d8;
+  --color-paid: #2eb86a; /* hero green: CTAs, PAID, positive */
+  --color-paid-deep: #1f8f50; /* green for text-on-light, hovers */
+  --color-accent: #1f8f50; /* brand accent = deep green (was coral) */
+  --color-hivis: #d4f23c; /* energy accent only — sparingly */
+  --color-danger: #c0392b; /* errors / destructive */
+
+  /* Compatibility aliases for retired tokens → resolve to the new palette so
+     any lingering usage degrades gracefully instead of losing all color. */
+  --color-cream: #fbfaf7;
+  --color-cream-deep: #f1efe8;
+  --color-coral: #2eb86a;
+  --color-coral-soft: #8fe0b4;
+  --color-coral-deep: #1f8f50;
+  --color-sun: #d4f23c;
+  --color-mint: #8fe0b4;
+  --color-sky: #e7eee9;
+  --color-iris: #e7eee9;
+  --color-blush: #f1efe8;
 
   --font-sans: var(--font-dm-sans), system-ui, sans-serif;
-  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-display: var(--font-bricolage), var(--font-dm-sans), system-ui, sans-serif;
+  /* legacy alias: existing `font-serif` usages adopt the new display face */
+  --font-serif: var(--font-bricolage), var(--font-dm-sans), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 

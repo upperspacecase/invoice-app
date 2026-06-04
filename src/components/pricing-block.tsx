@@ -1,272 +1,132 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 import { Check } from "lucide-react";
 
-type Plan = {
-  id: "send" | "pro" | "get-paid";
-  name: string;
-  monthly: number;
-  annualMonthly: number;
-  blurb: string;
-  features: string[];
-  highlighted?: boolean;
-};
-
-const PLANS: Plan[] = [
-  {
-    id: "send",
-    name: "Free",
-    monthly: 0,
-    annualMonthly: 0,
-    blurb: "3 invoices / month",
-    features: ["1 client", "PDF invoice", "Email send"],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    monthly: 12,
-    annualMonthly: 9,
-    blurb: "Everything you need",
-    features: [
-      "Unlimited invoices",
-      "Unlimited clients",
-      "Automatic reminders",
-      "Branding",
-      "Payment links",
-    ],
-    highlighted: true,
-  },
-  {
-    id: "get-paid",
-    name: "Get Paid",
-    monthly: 29,
-    annualMonthly: 24,
-    blurb: "For retainer-runners",
-    features: [
-      "Everything in Pro",
-      "Smart followups",
-      "Recurring invoices",
-      "Late-fee policy",
-    ],
-  },
+// One offer, one card. Free to send invoices; 1% only when an invoice gets
+// paid (capped). Layout: anchor price + callout + two-column "what's included".
+const INCLUDED: string[] = [
+  "Unlimited invoices, every currency",
+  "A pay link on every invoice",
+  "Card or bank — your client pays their way",
+  "Automatic follow-up on unpaid invoices",
+  "Money lands in your bank, not ours",
+  "1% only when an invoice gets paid",
+  "Capped — a big month won't punish you",
+  "Works on your phone, on the job",
 ];
 
 export function PricingBlock() {
-  const [annual, setAnnual] = useState(true);
-
   return (
-    <section
-      id="pricing"
-      className="px-6 sm:px-10 lg:px-14 py-16 sm:py-20 relative"
-    >
-      {/* decorative yellow dots cluster */}
-      <Dots top={100} left={60} color="var(--color-sun)" />
+    <section id="pricing" className="px-6 sm:px-10 lg:px-14 py-16 sm:py-24">
+      <div className="max-w-6xl mx-auto">
+        <h2
+          className="font-display text-center mb-10 sm:mb-12 leading-tight tracking-tight"
+          style={{
+            fontWeight: 800,
+            fontSize: "clamp(2rem, 5vw, 3.25rem)",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Free to send.{" "}
+          <span style={{ color: "var(--color-paid-deep)" }}>
+            1% to get paid.
+          </span>
+        </h2>
 
-      {/* sky-blue organic blob */}
-      <div
-        aria-hidden
-        className="absolute hidden md:block"
-        style={{
-          right: -30,
-          top: 140,
-          width: 180,
-          height: 140,
-          borderRadius: "60% 40% 50% 50% / 50% 60% 40% 50%",
-          background: "var(--color-sky)",
-          opacity: 0.55,
-          zIndex: 0,
-        }}
-      />
-
-      <div className="max-w-6xl mx-auto relative">
-        <div className="flex justify-between items-end flex-wrap gap-4 mb-9">
-          <h2
-            className="font-serif leading-tight tracking-tight"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(2rem, 4.5vw, 2.75rem)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Pricing
-          </h2>
-          <div
-            role="tablist"
-            aria-label="Billing cadence"
-            className="inline-flex text-xs rounded-full p-1"
-            style={{ background: "rgba(10,10,10,0.06)" }}
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!annual}
-              onClick={() => setAnnual(false)}
-              className="px-3.5 py-1.5 rounded-full transition-colors"
+        <div
+          className="rounded-[28px] grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] gap-10 lg:gap-14 p-7 sm:p-10 lg:p-12"
+          style={{
+            background: "var(--color-card)",
+            border: "1.5px solid var(--color-rule)",
+            boxShadow: "0 28px 60px -34px rgba(28,31,26,0.28)",
+          }}
+        >
+          {/* Left: the offer */}
+          <div className="flex flex-col">
+            <span
+              className="inline-flex self-start items-center text-[11px] font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6"
               style={{
-                background: !annual ? "var(--color-paper)" : "transparent",
-                color: !annual ? "var(--color-ink)" : "var(--color-mute)",
-                boxShadow: !annual ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                color: "var(--color-paid-deep)",
+                background: "rgba(46,184,106,0.12)",
               }}
             >
-              Monthly
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={annual}
-              onClick={() => setAnnual(true)}
-              className="px-3.5 py-1.5 rounded-full transition-colors inline-flex items-center gap-1.5"
-              style={{
-                background: annual ? "var(--color-paper)" : "transparent",
-                color: annual ? "var(--color-ink)" : "var(--color-mute)",
-                boxShadow: annual ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-              }}
+              For tradies who hate chasing
+            </span>
+
+            <div
+              className="font-display leading-none"
+              style={{ fontWeight: 800, fontSize: "clamp(2.5rem,6vw,3.5rem)" }}
             >
-              Annual
-              <span className="text-[10px]" style={{ opacity: 0.65 }}>
-                save 25%
+              Free <span style={{ color: "var(--color-mute)" }}>+</span>{" "}
+              <span style={{ color: "var(--color-paid-deep)" }}>1%</span>
+            </div>
+
+            <div className="mt-4 flex items-baseline gap-2.5">
+              <span
+                className="font-mono text-lg line-through"
+                style={{ color: "var(--color-mute)" }}
+              >
+                $29/mo
               </span>
-            </button>
-          </div>
-        </div>
+              <span className="font-mono text-2xl" style={{ fontWeight: 500 }}>
+                $0
+              </span>
+              <span className="text-sm text-mute">monthly · forever</span>
+            </div>
+            <div className="text-sm text-mute mt-1">
+              then just <span className="font-mono">1%</span> when an invoice
+              gets paid — capped each month.
+            </div>
 
-        <div className="grid md:grid-cols-3 gap-5">
-          {PLANS.map((plan) => (
-            <PricingCard key={plan.id} plan={plan} annual={annual} />
-          ))}
+            <div
+              className="rounded-2xl p-4 mt-7"
+              style={{
+                background: "rgba(46,184,106,0.08)",
+                border: "1px solid rgba(46,184,106,0.22)",
+              }}
+            >
+              <div className="text-sm font-semibold">
+                You only pay when it works.
+              </div>
+              <div className="text-[13px] text-mute mt-1 leading-relaxed">
+                No monthly fee, no lock-in. Nudge takes 1% of an invoice only
+                when the money actually lands in your account.
+              </div>
+            </div>
+
+            <Link
+              href="/signin"
+              className="mt-7 inline-flex items-center justify-center gap-2 h-14 rounded-2xl text-base font-semibold text-paper transition-transform hover:scale-[1.01]"
+              style={{ background: "var(--color-paid)" }}
+            >
+              Start free <span aria-hidden>→</span>
+            </Link>
+            <div className="text-xs text-mute text-center mt-3">
+              No card to start. Set up in minutes.
+            </div>
+          </div>
+
+          {/* Right: what's included */}
+          <div className="lg:border-l lg:pl-14" style={{ borderColor: "var(--color-rule)" }}>
+            <div className="text-base font-semibold mb-5">
+              What&apos;s included:
+            </div>
+            <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+              {INCLUDED.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-[15px] leading-snug">
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                    style={{ background: "var(--color-paid)" }}
+                    aria-hidden
+                  >
+                    <Check size={12} strokeWidth={3} color="#fff" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function PricingCard({ plan, annual }: { plan: Plan; annual: boolean }) {
-  const price = annual ? plan.annualMonthly : plan.monthly;
-  const highlight = plan.highlighted;
-  return (
-    <div
-      className="relative bg-white flex flex-col"
-      style={{
-        borderRadius: 20,
-        padding: 28,
-        border: highlight
-          ? "2px solid var(--color-coral)"
-          : "1px solid rgba(10,10,10,0.08)",
-        boxShadow: highlight
-          ? "0 20px 50px -25px rgba(255,107,74,0.45)"
-          : "0 12px 30px -20px rgba(10,10,10,0.1)",
-      }}
-    >
-      {highlight && (
-        <span
-          className="absolute font-semibold text-paper"
-          style={{
-            top: -14,
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "6px 16px",
-            borderRadius: 999,
-            fontSize: 12,
-            background: "var(--color-coral)",
-          }}
-        >
-          Most popular
-        </span>
-      )}
-
-      <div
-        className="font-serif"
-        style={{ fontSize: 34, fontWeight: 700, lineHeight: 1 }}
-      >
-        {plan.name}
-      </div>
-
-      <div className="mt-3 flex items-baseline gap-1">
-        <span
-          className="font-serif"
-          style={{ fontSize: 30, fontWeight: 700 }}
-        >
-          ${price}
-        </span>
-        <span className="text-sm text-mute">
-          {plan.id === "send" ? "" : "/mo"}
-        </span>
-      </div>
-      <div className="text-xs text-mute mt-1">
-        {plan.id !== "send" && annual ? "billed yearly · " : ""}
-        {plan.blurb}
-      </div>
-
-      <div
-        className="my-5"
-        style={{ height: 1, background: "rgba(10,10,10,0.08)" }}
-      />
-
-      <ul className="flex flex-col gap-2.5 flex-1">
-        {plan.features.map((f) => (
-          <li key={f} className="flex items-center gap-2.5 text-sm">
-            <span
-              className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0"
-              style={{
-                background: highlight
-                  ? "var(--color-coral)"
-                  : "var(--color-iris)",
-              }}
-              aria-hidden
-            >
-              <Check
-                size={10}
-                strokeWidth={3}
-                color={highlight ? "#fff" : "#6b3fa0"}
-              />
-            </span>
-            {f}
-          </li>
-        ))}
-      </ul>
-
-      <Link
-        href="/signin"
-        className="mt-6 inline-flex items-center justify-center text-sm font-semibold transition-colors"
-        style={{
-          height: 46,
-          borderRadius: 10,
-          background: highlight ? "var(--color-coral)" : "var(--color-paper)",
-          color: highlight ? "var(--color-paper)" : "var(--color-ink)",
-          border: highlight ? "none" : "1.5px solid rgba(10,10,10,0.15)",
-        }}
-      >
-        Start free
-      </Link>
-    </div>
-  );
-}
-
-function Dots({
-  top,
-  left,
-  color,
-}: {
-  top: number;
-  left: number;
-  color: string;
-}) {
-  return (
-    <svg
-      aria-hidden
-      width="60"
-      height="50"
-      viewBox="0 0 60 50"
-      className="absolute hidden md:block"
-      style={{ top, left, opacity: 0.6, zIndex: 0 }}
-    >
-      {[...Array(20)].map((_, i) => {
-        const x = (i % 5) * 12 + 4;
-        const y = Math.floor(i / 5) * 12 + 4;
-        return <circle key={i} cx={x} cy={y} r={2} fill={color} />;
-      })}
-    </svg>
   );
 }

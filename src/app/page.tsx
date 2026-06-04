@@ -66,24 +66,24 @@ function Hero() {
       <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-20 items-start">
         <div className="lg:pt-6">
           <h1
-            className="font-serif tracking-tight leading-[1.02]"
+            className="font-display tracking-tight leading-[1.02]"
             style={{
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: "clamp(2.5rem, 6vw, 4.25rem)",
               letterSpacing: "-0.02em",
             }}
           >
-            Invoice once.<br />
-            Stop{" "}
+            Invoice free.<br />
+            Get{" "}
             <span className="relative inline-block">
-              chasing
+              paid
               <UnderlineDoodle />
             </span>
             .
           </h1>
           <p className="mt-6 text-base sm:text-lg text-mute max-w-md leading-relaxed">
-            Send a clean invoice in seconds. Automatic reminders follow up
-            until it&apos;s paid.
+            Send invoices free. Nudge follows up on the unpaid ones so you
+            don&apos;t have to — and takes 1% only when the money lands.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link

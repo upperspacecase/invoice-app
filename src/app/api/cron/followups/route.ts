@@ -1,7 +1,6 @@
 import "server-only";
 import {
   getAutomation,
-  getBusiness,
   listAllUserIds,
   listInvoices,
 } from "@/lib/server/store";
@@ -9,7 +8,11 @@ import { sendInvoiceReminder } from "@/lib/server/dispatch";
 
 export const runtime = "nodejs";
 
-const REMIND_AFTER_DAYS = 7;
+const DAY = 24 * 60 * 60 * 1000;
+// Days since the invoice was sent that each stage fires at:
+// stage 1 (polite) @ 7, stage 2 (firm) @ 14, stage 3 (final) @ 30. Stops after 3.
+const STAGE_DAYS = [7, 14, 30];
+const MIN_GAP_DAYS = 5; // never fire two stages within this window
 
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -22,7 +25,7 @@ export async function GET(req: Request) {
   if (!authorized(req)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const cutoff = Date.now() - REMIND_AFTER_DAYS * 24 * 60 * 60 * 1000;
+  const now = Date.now();
   const uids = await listAllUserIds();
   let processed = 0;
   let reminded = 0;
@@ -31,11 +34,8 @@ export async function GET(req: Request) {
 
   for (const uid of uids) {
     try {
-      const business = await getBusiness(uid);
-      if (business.tier !== "get-paid") {
-        skipped++;
-        continue;
-      }
+      // Follow-ups are part of the free product now — the only gate is whether
+      // the tradie left the assistant switched on.
       const auto = await getAutomation(uid, "auto-remind");
       if (!auto?.enabled) {
         skipped++;
@@ -43,21 +43,24 @@ export async function GET(req: Request) {
       }
       processed++;
       const invoices = await listInvoices(uid);
-      const due = invoices.filter(
-        (i) =>
-          i.status === "sent" &&
-          i.sentAt <= cutoff &&
-          !i.lastReminderAt &&
-          i.channel === "email"
-      );
-      for (const inv of due) {
+      for (const inv of invoices) {
+        if (inv.status !== "sent" || inv.channel !== "email") continue;
+        // Treat a legacy single reminder as stage 1 already sent.
+        const count = inv.reminderCount ?? (inv.lastReminderAt ? 1 : 0);
+        if (count >= STAGE_DAYS.length) continue; // cadence finished
+        const ageDays = (now - inv.sentAt) / DAY;
+        if (ageDays < STAGE_DAYS[count]) continue; // next stage not due yet
+        if (
+          inv.lastReminderAt &&
+          (now - inv.lastReminderAt) / DAY < MIN_GAP_DAYS
+        ) {
+          continue; // sent one too recently
+        }
         const result = await sendInvoiceReminder(uid, inv.id, "agent");
         if (result) reminded++;
       }
     } catch (e) {
-      errors.push(
-        `${uid}: ${e instanceof Error ? e.message : "unknown"}`
-      );
+      errors.push(`${uid}: ${e instanceof Error ? e.message : "unknown"}`);
     }
   }
 

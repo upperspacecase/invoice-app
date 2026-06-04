@@ -2,6 +2,7 @@ import "server-only";
 import {
   createInvoice,
   getBusiness,
+  getFeesYtd,
   getInvoice,
   logActivity,
   remindInvoice,
@@ -12,6 +13,9 @@ import {
   sendReminderEmail,
 } from "@/lib/email/send-invoice";
 import { createInvoicePaymentLink } from "@/lib/stripe/payment-link";
+import { convert } from "@/lib/fx";
+import { currencyMeta } from "@/lib/currency";
+import { ANNUAL_FEE_CAP_MAJOR } from "@/lib/platform-fee";
 import type {
   ActivityActor,
   CurrencyCode,
@@ -41,11 +45,29 @@ export async function sendInvoice(
   // Failures are non-fatal — the invoice still goes out, the user can fix
   // the connection from /app/settings/billing.
   if (business.stripeAccountId) {
-    const link = await createInvoicePaymentLink({ business, invoice });
+    // How much of this year's $2,000 cap is left, expressed in the invoice's
+    // currency, so the 1% fee on this link never pushes the business over.
+    const year = new Date().getFullYear();
+    const ytdMajor = await getFeesYtd(uid, year);
+    const roomBusinessMajor = Math.max(0, ANNUAL_FEE_CAP_MAJOR - ytdMajor);
+    const roomInvoiceMajor = await convert(
+      roomBusinessMajor,
+      business.currency,
+      invoice.currency
+    );
+    const maxFeeMinor = Math.round(
+      roomInvoiceMajor * Math.pow(10, currencyMeta(invoice.currency).decimals)
+    );
+    const link = await createInvoicePaymentLink({
+      business,
+      invoice,
+      maxFeeMinor,
+    });
     if (link.ok) {
       const updated = await updateInvoice(uid, invoice.id, {
         paymentLinkUrl: link.url,
         stripePaymentLinkId: link.stripeLinkId,
+        platformFeeMinor: link.appliedFeeMinor,
       });
       if (updated) invoice = updated;
       await logActivity(

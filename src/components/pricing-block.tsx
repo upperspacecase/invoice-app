@@ -10,7 +10,7 @@ const INCLUDED: string[] = [
   "Automatic follow-up on unpaid invoices",
   "Money lands in your bank, not ours",
   "1% only when an invoice gets paid",
-  "Capped — a big month won't punish you",
+  "Capped at $2,000/yr — a big month won't punish you",
   "Works on your phone, on the job",
 ];
 
@@ -74,7 +74,7 @@ export function PricingBlock() {
             </div>
             <div className="text-sm text-mute mt-1">
               then just <span className="font-mono">1%</span> when an invoice
-              gets paid — capped each month.
+              gets paid — capped at $2,000 a year.
             </div>
 
             <div

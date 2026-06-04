@@ -11,7 +11,7 @@ const INCLUDED: string[] = [
   "Card or bank — your client pays their way",
   "Automatic follow-up on unpaid invoices",
   "Money lands in your bank, not ours",
-  "1% only when an invoice gets paid — capped",
+  "1% only when an invoice gets paid — capped at $2,000/yr",
 ];
 
 export function BillingPlans({
@@ -54,7 +54,7 @@ export function BillingPlans({
       </div>
       <p className="text-sm text-mute mt-1 leading-relaxed max-w-md">
         No monthly fee. Nudge takes 1% of an invoice only when the money lands
-        — capped each month. You only pay when you get paid.
+        — capped at $2,000 a year. You only pay when you get paid.
       </p>
 
       <div

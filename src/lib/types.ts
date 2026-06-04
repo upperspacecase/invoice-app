@@ -63,9 +63,18 @@ export type Invoice = {
   sentAt: number;
   paidAt?: number;
   lastReminderAt?: number;
+  reminderCount?: number;
   paymentLinkUrl?: string;
   stripePaymentLinkId?: string;
+  // 1% (annual-capped) platform fee attached to this invoice's pay link, in
+  // minor units of the invoice currency. Recorded against the yearly cap once
+  // the invoice is paid (platformFeeRecorded guards against double-counting).
+  platformFeeMinor?: number;
+  platformFeeRecorded?: boolean;
 };
+
+// Follow-up cadence stages: 1 polite, 2 firm, 3 final.
+export type FollowupStage = 1 | 2 | 3;
 
 export type IntegrationId =
   | "quickbooks"

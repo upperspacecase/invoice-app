@@ -2,7 +2,14 @@ import "server-only";
 import { Resend } from "resend";
 import { formatMoney } from "@/lib/currency";
 import { renderInvoicePdf } from "@/lib/pdf/invoice-pdf";
-import type { Business, Invoice } from "@/lib/types";
+import { draftFollowupBody } from "./followup-copy";
+import type { Business, FollowupStage, Invoice } from "@/lib/types";
+
+function clampStage(n: number): FollowupStage {
+  if (n >= 3) return 3;
+  if (n <= 1) return 1;
+  return 2;
+}
 
 export type EmailResult =
   | { ok: true; id: string }
@@ -141,16 +148,18 @@ export async function sendReminderEmail(input: {
   }
 
   const { business, invoice } = input;
-  const subject = `Friendly reminder: invoice ${invoice.id} from ${business.name}`;
-  const total = formatMoney(invoice.amount, invoice.currency, {
-    withCode: true,
-  });
+  const stage = clampStage(invoice.reminderCount ?? 1);
+  const subject =
+    stage === 1
+      ? `Friendly reminder: invoice ${invoice.id} from ${business.name}`
+      : stage === 2
+      ? `Following up: invoice ${invoice.id} from ${business.name}`
+      : `Final notice: invoice ${invoice.id} from ${business.name}`;
+  // Nudge writes the message as the assistant (LLM when configured, staged
+  // template otherwise); we own the pay link + payment lines + sign-off.
+  const body = await draftFollowupBody({ business, invoice, stage });
   const lines = [
-    `Hi ${invoice.clientName.split(/[\s,]+/)[0] || "there"},`,
-    "",
-    `I'm Nudge, ${business.name}'s invoicing assistant — I keep things tidy on their behalf so nothing slips through.`,
-    "",
-    `Invoice ${invoice.id} for ${total} is still showing as unpaid. No stress at all — here's an easy way to sort it:`,
+    body,
     "",
     input.paymentLinkUrl ? `Pay now: ${input.paymentLinkUrl}` : "",
     "",

@@ -25,6 +25,8 @@ import {
   initialIntegrations,
   initialInvoices,
 } from "../demo-data";
+import { convert } from "../fx";
+import { currencyMeta } from "../currency";
 
 const PROFILE_DOC = "profile";
 
@@ -323,6 +325,13 @@ function normaliseInvoice(id: string, data: Record<string, unknown>): Invoice {
       typeof data.stripePaymentLinkId === "string"
         ? data.stripePaymentLinkId
         : undefined,
+    reminderCount:
+      typeof data.reminderCount === "number" ? data.reminderCount : undefined,
+    platformFeeMinor:
+      typeof data.platformFeeMinor === "number"
+        ? data.platformFeeMinor
+        : undefined,
+    platformFeeRecorded: data.platformFeeRecorded === true ? true : undefined,
   };
 }
 
@@ -440,6 +449,7 @@ export async function markInvoicePaid(
     { status: "paid", paidAt: Timestamp.fromMillis(now) },
     { merge: true }
   );
+  await recordPlatformFeeForPaidInvoice(uid, inv);
   await pushActivity(uid, actor, `Marked ${id} paid`, "manual");
   return { ...inv, status: "paid", paidAt: now };
 }
@@ -455,12 +465,67 @@ export async function remindInvoice(
   const inv = normaliseInvoice(snap.id, snap.data() ?? {});
   if (inv.status !== "sent") return inv;
   const now = Date.now();
+  const reminderCount = (inv.reminderCount ?? 0) + 1;
   await ref.set(
-    { lastReminderAt: Timestamp.fromMillis(now) },
+    { lastReminderAt: Timestamp.fromMillis(now), reminderCount },
     { merge: true }
   );
-  await pushActivity(uid, actor, `Sent reminder for ${id}`, `to ${inv.clientName}`);
-  return { ...inv, lastReminderAt: now };
+  const stageLabel =
+    reminderCount >= 3 ? "final notice" : reminderCount === 2 ? "firm" : "polite";
+  await pushActivity(
+    uid,
+    actor,
+    `Nudged ${inv.clientName} on ${id}`,
+    `${stageLabel} follow-up`
+  );
+  return { ...inv, lastReminderAt: now, reminderCount };
+}
+
+// ---------- platform fee cap (per business, per calendar year) ----------
+
+function feesDoc(uid: string, year: number) {
+  return userDoc(uid).collection("meta").doc(`fees-${year}`);
+}
+
+// YTD platform fees charged to this business this year, in the business's
+// default currency (major units).
+export async function getFeesYtd(uid: string, year: number): Promise<number> {
+  const snap = await feesDoc(uid, year).get();
+  const total = snap.exists ? snap.data()?.total : 0;
+  return typeof total === "number" && Number.isFinite(total) ? total : 0;
+}
+
+export async function addFeesYtd(
+  uid: string,
+  year: number,
+  amountMajor: number
+): Promise<void> {
+  if (!(amountMajor > 0)) return;
+  await feesDoc(uid, year).set(
+    { total: FieldValue.increment(amountMajor) },
+    { merge: true }
+  );
+}
+
+// When an invoice is paid, count its 1% fee toward the business's yearly cap.
+// Guarded by platformFeeRecorded so it only happens once per invoice.
+async function recordPlatformFeeForPaidInvoice(
+  uid: string,
+  inv: Invoice
+): Promise<void> {
+  if (!inv.platformFeeMinor || inv.platformFeeRecorded) return;
+  const business = await getBusiness(uid);
+  const meta = currencyMeta(inv.currency);
+  const feeMajorInvoiceCcy = inv.platformFeeMinor / Math.pow(10, meta.decimals);
+  const feeMajorBusinessCcy = await convert(
+    feeMajorInvoiceCcy,
+    inv.currency,
+    business.currency
+  );
+  await addFeesYtd(uid, new Date().getFullYear(), feeMajorBusinessCcy);
+  await invoicesCol(uid)
+    .doc(inv.id)
+    .set({ platformFeeRecorded: true }, { merge: true });
 }
 
 // ---------- integrations ----------

@@ -144,7 +144,7 @@ export function ApiKeysPanel({
         </div>
       )}
 
-      {error && <div className="text-xs text-accent mb-3">{error}</div>}
+      {error && <div className="text-xs text-danger mb-3">{error}</div>}
 
       {keys.length === 0 && !creating && (
         <div className="p-6 rounded-xl border border-rule bg-card text-center text-xs text-mute">

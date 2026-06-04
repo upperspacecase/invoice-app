@@ -1,5 +1,6 @@
 import "server-only";
 import { formatMoney } from "@/lib/currency";
+import { followupBody } from "@/lib/followup-templates";
 import type { Business, FollowupStage, Invoice } from "@/lib/types";
 
 // Nudge writes the follow-up *as the tradie's invoicing assistant*. Stage 1 is
@@ -21,7 +22,16 @@ export async function draftFollowupBody(input: {
   const first = invoice.clientName.split(/[\s,]+/)[0] || "there";
 
   const llm = await tryClaude({ business, invoice, stage, total, first });
-  return llm ?? fallback({ business, stage, total, first, invoiceId: invoice.id });
+  return (
+    llm ??
+    followupBody({
+      businessName: business.name,
+      clientFirst: first,
+      invoiceId: invoice.id,
+      total,
+      stage,
+    })
+  );
 }
 
 const TONE: Record<FollowupStage, string> = {
@@ -80,19 +90,3 @@ async function tryClaude(args: {
   }
 }
 
-function fallback(args: {
-  business: Business;
-  stage: FollowupStage;
-  total: string;
-  first: string;
-  invoiceId: string;
-}): string {
-  const { business, stage, total, first, invoiceId } = args;
-  const intro =
-    stage === 1
-      ? `I'm Nudge, ${business.name}'s invoicing assistant — I keep things tidy on their behalf. Just a gentle heads-up that invoice ${invoiceId} for ${total} is still showing as unpaid. No stress at all — whenever it suits, here's the easiest way to sort it:`
-      : stage === 2
-      ? `Nudge here, ${business.name}'s invoicing assistant. Following up on invoice ${invoiceId} for ${total} — it's now overdue and still showing unpaid on our end. I'd love to get this wrapped up; here's the quickest way:`
-      : `Nudge here, writing on behalf of ${business.name}. This is a final reminder that invoice ${invoiceId} for ${total} remains unpaid and is now well past due. Please arrange payment using the options below, or reply so we can sort out anything outstanding:`;
-  return `Hi ${first},\n\n${intro}`;
-}

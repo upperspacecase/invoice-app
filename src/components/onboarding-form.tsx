@@ -4,18 +4,24 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ArrowRight } from "lucide-react";
 import { updateBusinessAction } from "@/app/_actions";
+import { initialBusiness } from "@/lib/demo-data";
 import type { Business } from "@/lib/types";
+
+const LABEL = "block font-mono text-[11px] uppercase tracking-widest text-mute mb-2";
+const FIELD =
+  "w-full px-4 border-[1.5px] border-rule bg-card outline-none focus:border-ink text-sm";
 
 export function OnboardingForm({ initial }: { initial: Business }) {
   const router = useRouter();
+  // Blank out the seed defaults so the user types their own.
   const [name, setName] = useState(
-    initial.name === "Studio Ltd" ? "" : initial.name
+    initial.name === initialBusiness.name ? "" : initial.name
   );
-  const [email, setEmail] = useState(initial.email);
+  const [email, setEmail] = useState(
+    initial.email === initialBusiness.email ? "" : initial.email
+  );
   const [payment, setPayment] = useState(
-    initial.payment === "Wise — IBAN GB29 NWBK 6016 1331 9268 19"
-      ? ""
-      : initial.payment
+    initial.payment === initialBusiness.payment ? "" : initial.payment
   );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -55,8 +61,8 @@ export function OnboardingForm({ initial }: { initial: Business }) {
   return (
     <div className="pt-12 max-w-md mx-auto">
       <h1
-        className="font-serif text-4xl leading-tight"
-        style={{ fontWeight: 400 }}
+        className="font-display text-4xl leading-tight tracking-tight"
+        style={{ fontWeight: 800, letterSpacing: "-0.02em" }}
       >
         Set your details once.
       </h1>
@@ -67,10 +73,7 @@ export function OnboardingForm({ initial }: { initial: Business }) {
 
       <form onSubmit={submit} className="space-y-5">
         <div>
-          <label
-            htmlFor="biz-name"
-            className="block text-xs uppercase tracking-widest text-mute mb-2"
-          >
+          <label htmlFor="biz-name" className={LABEL}>
             Business name
           </label>
           <input
@@ -78,17 +81,14 @@ export function OnboardingForm({ initial }: { initial: Business }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Studio Ltd"
+            placeholder="e.g. Apex Electrical"
             autoFocus
-            className="w-full h-11 px-4 rounded-md border border-rule bg-card outline-none focus:border-ink/40 text-sm"
+            className={`${FIELD} h-11`}
           />
         </div>
 
         <div>
-          <label
-            htmlFor="biz-email"
-            className="block text-xs uppercase tracking-widest text-mute mb-2"
-          >
+          <label htmlFor="biz-email" className={LABEL}>
             Email on invoices
           </label>
           <input
@@ -96,16 +96,13 @@ export function OnboardingForm({ initial }: { initial: Business }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@yourstudio.co"
-            className="w-full h-11 px-4 rounded-md border border-rule bg-card outline-none focus:border-ink/40 text-sm"
+            placeholder="you@yourtrade.co"
+            className={`${FIELD} h-11`}
           />
         </div>
 
         <div>
-          <label
-            htmlFor="biz-payment"
-            className="block text-xs uppercase tracking-widest text-mute mb-2"
-          >
+          <label htmlFor="biz-payment" className={LABEL}>
             Payment details
           </label>
           <textarea
@@ -113,18 +110,19 @@ export function OnboardingForm({ initial }: { initial: Business }) {
             rows={2}
             value={payment}
             onChange={(e) => setPayment(e.target.value)}
-            placeholder="e.g. Wise — IBAN GB29 NWBK… or bank account"
-            className="w-full px-4 py-3 rounded-md border border-rule bg-card outline-none focus:border-ink/40 text-sm resize-none"
+            placeholder="e.g. Bank transfer — sort code 04-00-04 · acc 12345678"
+            className={`${FIELD} py-3 resize-none`}
           />
         </div>
 
-        {error && <div className="text-xs text-accent">{error}</div>}
+        {error && <div className="text-xs text-danger">{error}</div>}
 
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center gap-4 pt-2">
           <button
             type="submit"
             disabled={pending}
-            className="h-11 px-6 rounded-md bg-ink text-paper text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+            className="h-11 px-6 bg-ink text-paper text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50 inline-flex items-center gap-2"
+            style={{ boxShadow: "4px 4px 0 var(--color-paid)" }}
           >
             {pending ? "Saving…" : "Continue"}
             <ArrowRight size={14} />
@@ -133,7 +131,7 @@ export function OnboardingForm({ initial }: { initial: Business }) {
             type="button"
             onClick={skip}
             disabled={pending}
-            className="text-xs text-mute hover:text-ink underline underline-offset-4 disabled:opacity-50"
+            className="font-mono text-[11px] uppercase tracking-widest text-mute hover:text-ink underline underline-offset-4 disabled:opacity-50"
           >
             Skip for now
           </button>

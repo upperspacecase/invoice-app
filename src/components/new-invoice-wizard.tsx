@@ -197,8 +197,8 @@ function StepPickClient({
   return (
     <div>
       <h1
-        className="font-serif text-4xl sm:text-5xl leading-tight"
-        style={{ fontWeight: 400, fontStyle: "italic" }}
+        className="font-display text-4xl sm:text-5xl leading-tight tracking-tight"
+        style={{ fontWeight: 800, letterSpacing: "-0.02em" }}
       >
         Who&apos;s it for?
       </h1>
@@ -249,8 +249,8 @@ function StepAmount({
   return (
     <div>
       <h1
-        className="font-serif text-4xl sm:text-5xl leading-tight"
-        style={{ fontWeight: 400, fontStyle: "italic" }}
+        className="font-display text-4xl sm:text-5xl leading-tight tracking-tight"
+        style={{ fontWeight: 800, letterSpacing: "-0.02em" }}
       >
         How much?
       </h1>
@@ -325,7 +325,7 @@ function StepAmount({
         type="button"
         onClick={onNext}
         disabled={!valid}
-        className="mt-12 w-full h-14 rounded-xl bg-ink text-paper flex items-center justify-center gap-2 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="mt-12 w-full h-14 bg-ink text-paper flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-30 disabled:cursor-not-allowed"
       >
         Preview
         <ArrowRight size={16} />
@@ -357,8 +357,8 @@ function StepPreview({
   return (
     <div>
       <h1
-        className="font-serif text-4xl sm:text-5xl leading-tight"
-        style={{ fontWeight: 400, fontStyle: "italic" }}
+        className="font-display text-4xl sm:text-5xl leading-tight tracking-tight"
+        style={{ fontWeight: 800, letterSpacing: "-0.02em" }}
       >
         Looks good?
       </h1>
@@ -425,14 +425,14 @@ function StepPreview({
       </div>
 
       {error && (
-        <div className="mt-4 text-xs text-accent">{error}</div>
+        <div className="mt-4 text-xs text-danger">{error}</div>
       )}
 
       <button
         type="button"
         onClick={onSend}
         disabled={pending}
-        className="mt-8 w-full h-14 rounded-xl bg-ink text-paper flex items-center justify-center gap-2 text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+        className="mt-8 w-full h-14 bg-ink text-paper flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50"
       >
         <Send size={14} />
         {pending ? "Sending…" : `Send via ${channelLabel(channel)}`}

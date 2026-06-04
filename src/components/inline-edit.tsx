@@ -94,7 +94,7 @@ export function InlineEdit({
       ) : (
         <div className="text-sm break-words">{value}</div>
       )}
-      {error && <div className="mt-1 text-[11px] text-accent">{error}</div>}
+      {error && <div className="mt-1 text-[11px] text-danger">{error}</div>}
     </div>
   );
 }

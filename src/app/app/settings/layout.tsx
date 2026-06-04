@@ -18,8 +18,8 @@ export default function SettingsLayout({
           <ArrowLeft size={16} />
         </Link>
         <h1
-          className="font-serif text-3xl sm:text-4xl leading-tight"
-          style={{ fontWeight: 400 }}
+          className="font-display text-3xl sm:text-4xl leading-tight tracking-tight"
+          style={{ fontWeight: 800, letterSpacing: "-0.02em" }}
         >
           Settings
         </h1>

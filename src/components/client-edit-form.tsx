@@ -99,8 +99,8 @@ export function ClientEditForm({
           <ArrowLeft size={16} />
         </Link>
         <h1
-          className="font-serif text-2xl sm:text-3xl leading-tight"
-          style={{ fontWeight: 400 }}
+          className="font-display text-2xl sm:text-3xl leading-tight tracking-tight"
+          style={{ fontWeight: 800, letterSpacing: "-0.02em" }}
         >
           {client.name}
         </h1>
@@ -257,7 +257,7 @@ export function ClientEditForm({
             Saved
           </span>
         )}
-        {error && <span className="text-xs text-accent">{error}</span>}
+        {error && <span className="text-xs text-danger">{error}</span>}
       </div>
     </div>
   );

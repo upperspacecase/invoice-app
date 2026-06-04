@@ -29,7 +29,10 @@ export function AppHeader() {
   }
 
   return (
-    <header className="px-6 sm:px-10 lg:px-14 py-5 border-b border-rule">
+    <header
+      className="px-6 sm:px-10 lg:px-14 py-5 border-b-[1.5px]"
+      style={{ borderColor: "var(--color-ink)" }}
+    >
       <div className="max-w-2xl mx-auto flex items-center justify-between">
         <Link href="/app" aria-label="Nudge home">
           <Wordmark size="sm" />
@@ -54,7 +57,7 @@ export function AppHeader() {
         </div>
       </div>
       {error && (
-        <div className="text-[11px] text-accent text-center mt-1">{error}</div>
+        <div className="text-[11px] text-danger text-center mt-1">{error}</div>
       )}
     </header>
   );

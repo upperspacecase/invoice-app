@@ -6,13 +6,23 @@
   --color-card: #ffffff;
   --color-ink: #1c1f1a; /* warm near-black */
   --color-mute: rgba(28, 31, 26, 0.58);
-  --color-rule: rgba(28, 31, 26, 0.12);
+  --color-rule: rgba(28, 31, 26, 0.22);
 
   --color-paid: #2eb86a; /* hero green: CTAs, PAID, positive */
   --color-paid-deep: #1f8f50; /* green for text-on-light, hovers */
   --color-accent: #1f8f50; /* brand accent = deep green (was coral) */
   --color-hivis: #d4f23c; /* energy accent only — sparingly */
   --color-danger: #c0392b; /* errors / destructive */
+
+  /* Utilitarian: square everything by default. rounded-full is left alone so
+     dots, avatars and status pips stay circular. One lever, whole app. */
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
 
   /* Compatibility aliases for retired tokens → resolve to the new palette so
      any lingering usage degrades gracefully instead of losing all color. */

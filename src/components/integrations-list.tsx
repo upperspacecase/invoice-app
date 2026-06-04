@@ -39,7 +39,7 @@ export function IntegrationsList({
 
   return (
     <div className="space-y-2">
-      {error && <div className="text-xs text-accent">{error}</div>}
+      {error && <div className="text-xs text-danger">{error}</div>}
       {integrations.map((it) => {
         const busy = pendingId === it.id;
         return (
@@ -104,7 +104,7 @@ export function IntegrationsList({
                         setOpenMenu(null);
                         toggle(it);
                       }}
-                      className="block w-full text-left px-3 py-2 text-xs hover:bg-ink/5 text-accent"
+                      className="block w-full text-left px-3 py-2 text-xs hover:bg-ink/5 text-danger"
                     >
                       Disconnect
                     </button>

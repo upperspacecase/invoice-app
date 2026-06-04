@@ -142,7 +142,7 @@ export function SignInForm() {
       <div>
         <label
           htmlFor="email"
-          className="block text-xs uppercase tracking-widest text-mute mb-2"
+          className="block font-mono text-[11px] uppercase tracking-widest text-mute mb-2"
         >
           Email
         </label>
@@ -153,15 +153,16 @@ export function SignInForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@studio.co"
-          className="w-full h-12 px-4 rounded-md border border-rule bg-card outline-none focus:border-ink/40 text-sm"
+          placeholder="you@apexelectrical.co"
+          className="w-full h-12 px-4 border-[1.5px] border-rule bg-card outline-none focus:border-ink text-sm"
         />
       </div>
 
       <button
         type="submit"
         disabled={status.kind === "sending" || !email.trim()}
-        className="w-full h-12 rounded-md bg-ink text-paper text-sm font-medium hover:bg-ink/90 transition-colors disabled:opacity-50"
+        className="w-full h-12 bg-ink text-paper text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50"
+        style={{ boxShadow: "4px 4px 0 var(--color-paid)" }}
       >
         {status.kind === "sending" ? "Sending…" : "Continue"}
       </button>
@@ -176,13 +177,13 @@ export function SignInForm() {
         type="button"
         onClick={handleGoogle}
         disabled={status.kind === "sending"}
-        className="w-full h-12 rounded-md border border-rule text-sm font-medium hover:border-ink/40 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full h-12 border-[1.5px] border-ink text-xs font-bold uppercase tracking-widest hover:bg-ink/5 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
         Continue with Google
       </button>
 
       {status.kind === "error" && (
-        <div className="text-xs text-accent">{status.message}</div>
+        <div className="text-xs text-danger">{status.message}</div>
       )}
     </form>
   );

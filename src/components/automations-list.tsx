@@ -56,7 +56,7 @@ export function AutomationsList({
 
   return (
     <div>
-      {error && <div className="text-xs text-accent mb-3">{error}</div>}
+      {error && <div className="text-xs text-danger mb-3">{error}</div>}
       <ul className="space-y-2">
         {automations.map((a) => {
           const feature = FEATURE_FOR_AUTOMATION[a.id];

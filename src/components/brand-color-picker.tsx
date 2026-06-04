@@ -84,7 +84,7 @@ export function BrandColorPicker({
         )}
       </div>
       {error && (
-        <div className="text-xs text-accent mt-2">{error}</div>
+        <div className="text-xs text-danger mt-2">{error}</div>
       )}
     </div>
   );

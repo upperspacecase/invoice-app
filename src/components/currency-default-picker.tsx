@@ -58,7 +58,7 @@ export function CurrencyDefaultPicker({
         Live FX rates from exchangerate.host. New invoices default to this; you
         can override per invoice.
       </p>
-      {error && <p className="text-xs text-accent mt-1">{error}</p>}
+      {error && <p className="text-xs text-danger mt-1">{error}</p>}
     </div>
   );
 }

@@ -1,38 +1,35 @@
-import { Zap, Bell, TrendingUp } from "lucide-react";
+import { Zap, Bell, Banknote } from "lucide-react";
 
 const ITEMS = [
   {
+    n: "01",
     icon: Zap,
-    iconBg: "rgba(46,184,106,0.14)",
-    iconColor: "var(--color-paid-deep)",
     title: "Send it from your phone",
-    body: "Client, job, amount — invoice out in seconds.",
-    squiggle: "var(--color-paid)",
+    body: "Client, job, amount — invoice out in three taps.",
   },
   {
+    n: "02",
     icon: Bell,
-    iconBg: "rgba(212,242,60,0.30)",
-    iconColor: "#5f6b12",
     title: "Hand off the chasing",
-    body: "Nudge follows up with your client — kindly, as your invoicing assistant.",
-    squiggle: "#9aa92a",
+    body: "Nudge follows up — polite, then firm — as your invoicing assistant.",
   },
   {
-    icon: TrendingUp,
-    iconBg: "rgba(46,184,106,0.14)",
-    iconColor: "var(--color-paid-deep)",
+    n: "03",
+    icon: Banknote,
     title: "1% to get paid",
-    body: "Card or bank. The money's yours — our cut comes off the top.",
-    squiggle: "var(--color-paid)",
+    body: "Card or bank. The money's yours; our cut comes off the top.",
   },
 ] as const;
 
 export function FeatureCards() {
   return (
     <section className="px-6 sm:px-10 lg:px-14 pb-16 sm:pb-20">
-      <div className="max-w-6xl mx-auto grid sm:grid-cols-3 gap-4 sm:gap-5">
-        {ITEMS.map((it) => (
-          <FeatureCard key={it.title} {...it} />
+      <div
+        className="max-w-6xl mx-auto grid sm:grid-cols-3"
+        style={{ border: "1.5px solid var(--color-ink)" }}
+      >
+        {ITEMS.map((it, i) => (
+          <FeatureCard key={it.n} {...it} last={i === ITEMS.length - 1} />
         ))}
       </div>
     </section>
@@ -40,53 +37,35 @@ export function FeatureCards() {
 }
 
 function FeatureCard({
+  n,
   icon: Icon,
-  iconBg,
-  iconColor,
   title,
   body,
-  squiggle,
-}: (typeof ITEMS)[number]) {
+  last,
+}: (typeof ITEMS)[number] & { last: boolean }) {
   return (
     <div
-      className="bg-white rounded-2xl p-6 relative"
-      style={{
-        border: "1px solid rgba(10,10,10,0.06)",
-        boxShadow: "0 12px 30px -20px rgba(10,10,10,0.12)",
-      }}
+      className={`p-6 sm:p-8 ${
+        last ? "" : "border-b-[1.5px] sm:border-b-0 sm:border-r-[1.5px]"
+      }`}
+      style={last ? undefined : { borderColor: "var(--color-ink)" }}
     >
-      <div
-        className="w-11 h-11 rounded-full flex items-center justify-center mb-5"
-        style={{ background: iconBg, color: iconColor }}
-        aria-hidden
-      >
-        <Icon size={18} strokeWidth={2} />
+      <div className="flex items-center justify-between mb-7">
+        <span className="font-mono text-xs uppercase tracking-widest text-mute">
+          {n}
+        </span>
+        <span
+          className="w-9 h-9 flex items-center justify-center"
+          style={{ border: "1.5px solid var(--color-ink)" }}
+          aria-hidden
+        >
+          <Icon size={16} strokeWidth={2} />
+        </span>
       </div>
-      <div className="text-base font-semibold mb-1">{title}</div>
+      <div className="font-display text-lg mb-1.5" style={{ fontWeight: 700 }}>
+        {title}
+      </div>
       <div className="text-sm text-mute leading-relaxed">{body}</div>
-      <Squiggle color={squiggle} />
     </div>
-  );
-}
-
-function Squiggle({ color }: { color: string }) {
-  return (
-    <svg
-      aria-hidden
-      width="60"
-      height="14"
-      viewBox="0 0 60 14"
-      className="absolute"
-      style={{ bottom: 12, right: 18 }}
-    >
-      <path
-        d="M 2 8 Q 12 -2, 22 8 T 42 8 T 58 4"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.55"
-      />
-    </svg>
   );
 }

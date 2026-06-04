@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 
-// One offer, one card. Free to send invoices; 1% only when an invoice gets
-// paid (capped). Layout: anchor price + callout + two-column "what's included".
+// One offer, one card. Free to send; 1% only when an invoice gets paid (capped
+// at $2,000/yr). Utilitarian: hard ink rules, square corners, mono labels.
 const INCLUDED: string[] = [
   "Unlimited invoices, every currency",
   "A pay link on every invoice",
   "Card or bank — your client pays their way",
-  "Automatic follow-up on unpaid invoices",
+  "Polite → firm → final follow-up, until paid",
   "Money lands in your bank, not ours",
   "1% only when an invoice gets paid",
   "Capped at $2,000/yr — a big month won't punish you",
@@ -33,88 +33,88 @@ export function PricingBlock() {
         </h2>
 
         <div
-          className="rounded-[28px] grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] gap-10 lg:gap-14 p-7 sm:p-10 lg:p-12"
+          className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] bg-card"
           style={{
-            background: "var(--color-card)",
-            border: "1.5px solid var(--color-rule)",
-            boxShadow: "0 28px 60px -34px rgba(28,31,26,0.28)",
+            border: "1.5px solid var(--color-ink)",
+            boxShadow: "8px 8px 0 var(--color-ink)",
           }}
         >
           {/* Left: the offer */}
-          <div className="flex flex-col">
+          <div
+            className="p-7 sm:p-10 flex flex-col lg:border-r-[1.5px] border-b-[1.5px] lg:border-b-0"
+            style={{ borderColor: "var(--color-ink)" }}
+          >
             <span
-              className="inline-flex self-start items-center text-[11px] font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6"
-              style={{
-                color: "var(--color-paid-deep)",
-                background: "rgba(46,184,106,0.12)",
-              }}
+              className="inline-flex self-start items-center font-mono text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1.5 mb-7"
+              style={{ border: "1.5px solid var(--color-ink)" }}
             >
               For tradies who hate chasing
             </span>
 
-            <div
-              className="font-display leading-none"
-              style={{ fontWeight: 800, fontSize: "clamp(2.5rem,6vw,3.5rem)" }}
-            >
-              Free <span style={{ color: "var(--color-mute)" }}>+</span>{" "}
-              <span style={{ color: "var(--color-paid-deep)" }}>1%</span>
-            </div>
-
-            <div className="mt-4 flex items-baseline gap-2.5">
+            <div className="flex items-baseline gap-3">
               <span
-                className="font-mono text-lg line-through"
-                style={{ color: "var(--color-mute)" }}
+                className="font-display leading-none"
+                style={{ fontWeight: 800, fontSize: "clamp(3.5rem,8vw,5rem)" }}
               >
-                $29/mo
+                1%
               </span>
-              <span className="font-mono text-2xl" style={{ fontWeight: 500 }}>
-                $0
+              <span className="font-mono text-xs uppercase tracking-widest text-mute leading-tight">
+                on invoices
+                <br />
+                you get paid
               </span>
-              <span className="text-sm text-mute">monthly · forever</span>
-            </div>
-            <div className="text-sm text-mute mt-1">
-              then just <span className="font-mono">1%</span> when an invoice
-              gets paid — capped at $2,000 a year.
             </div>
 
+            <p className="text-sm text-mute mt-5 leading-relaxed">
+              No monthly fee, no per-seat, no lock-in. We take 1% only when an
+              invoice actually gets paid — capped at $2,000 a year.
+            </p>
+
             <div
-              className="rounded-2xl p-4 mt-7"
-              style={{
-                background: "rgba(46,184,106,0.08)",
-                border: "1px solid rgba(46,184,106,0.22)",
-              }}
+              className="p-4 mt-7"
+              style={{ border: "1.5px solid var(--color-ink)" }}
             >
+              <div className="font-mono text-[10px] uppercase tracking-widest text-mute mb-1.5">
+                The deal
+              </div>
               <div className="text-sm font-semibold">
                 You only pay when it works.
               </div>
               <div className="text-[13px] text-mute mt-1 leading-relaxed">
-                No monthly fee, no lock-in. Nudge takes 1% of an invoice only
-                when the money actually lands in your account.
+                Nudge takes its 1% the moment the money lands in your account —
+                never before.
               </div>
             </div>
 
             <Link
               href="/signin"
-              className="mt-7 inline-flex items-center justify-center gap-2 h-14 rounded-2xl text-base font-semibold text-paper transition-transform hover:scale-[1.01]"
-              style={{ background: "var(--color-paid)" }}
+              className="mt-7 inline-flex items-center justify-center px-8 text-paper text-sm font-bold uppercase tracking-widest transition-transform active:translate-x-[3px] active:translate-y-[3px]"
+              style={{
+                height: 54,
+                background: "var(--color-paid)",
+                boxShadow: "4px 4px 0 var(--color-ink)",
+              }}
             >
-              Start free <span aria-hidden>→</span>
+              Start free
             </Link>
-            <div className="text-xs text-mute text-center mt-3">
-              No card to start. Set up in minutes.
+            <div className="font-mono text-[10px] uppercase tracking-widest text-mute text-center mt-3">
+              No card to start · set up in minutes
             </div>
           </div>
 
           {/* Right: what's included */}
-          <div className="lg:border-l lg:pl-14" style={{ borderColor: "var(--color-rule)" }}>
-            <div className="text-base font-semibold mb-5">
-              What&apos;s included:
+          <div className="p-7 sm:p-10">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-mute mb-5">
+              What&apos;s included
             </div>
             <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
               {INCLUDED.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-[15px] leading-snug">
+                <li
+                  key={item}
+                  className="flex items-start gap-3 text-[15px] leading-snug"
+                >
                   <span
-                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                    className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5"
                     style={{ background: "var(--color-paid)" }}
                     aria-hidden
                   >

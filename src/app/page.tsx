@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Play } from "lucide-react";
 import { HeroIllustration } from "@/components/landing/hero-illustration";
 import { FeatureCards } from "@/components/landing/feature-cards";
 import { SocialProof } from "@/components/landing/social-proof";
@@ -11,7 +10,7 @@ export default function LandingPage() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "var(--color-cream)" }}
+      style={{ background: "var(--color-paper)" }}
     >
       <Nav />
       <main className="flex-1">
@@ -26,28 +25,30 @@ export default function LandingPage() {
   );
 }
 
-
 function Nav() {
   return (
-    <header className="px-6 sm:px-10 lg:px-14 pt-6">
+    <header
+      className="px-6 sm:px-10 lg:px-14 py-4 border-b-[1.5px]"
+      style={{ borderColor: "var(--color-ink)" }}
+    >
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link href="/" aria-label="Nudge home">
           <Wordmark size="lg" />
         </Link>
-        <nav className="flex items-center gap-5 sm:gap-7 text-sm">
-          <a href="#how-it-works" className="hidden sm:inline">
+        <nav className="flex items-center gap-5 sm:gap-7 font-mono text-[11px] uppercase tracking-widest">
+          <a href="#how-it-works" className="hidden sm:inline hover:text-paid-deep">
             How it works
           </a>
-          <a href="#pricing" className="hidden sm:inline">
+          <a href="#pricing" className="hidden sm:inline hover:text-paid-deep">
             Pricing
           </a>
-          <Link href="/signin" className="hidden sm:inline">
+          <Link href="/signin" className="hidden sm:inline hover:text-paid-deep">
             Log in
           </Link>
           <Link
             href="/signin"
-            className="px-4 sm:px-5 h-10 inline-flex items-center justify-center rounded-full text-paper text-sm font-semibold"
-            style={{ background: "var(--color-coral)" }}
+            className="px-5 h-9 inline-flex items-center justify-center text-paper text-[11px] font-bold uppercase tracking-widest"
+            style={{ background: "var(--color-ink)" }}
           >
             Start free
           </Link>
@@ -61,61 +62,65 @@ function Hero() {
   return (
     <section
       id="how-it-works"
-      className="px-6 sm:px-10 lg:px-14 pt-12 sm:pt-16 lg:pt-20 pb-16 sm:pb-20"
+      className="px-6 sm:px-10 lg:px-14 pt-14 sm:pt-20 pb-16 sm:pb-24"
     >
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-20 items-start">
-        <div className="lg:pt-6">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
+        <div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-mute mb-6 flex items-center gap-2.5">
+            <span
+              className="inline-block w-2.5 h-2.5"
+              style={{ background: "var(--color-paid)" }}
+              aria-hidden
+            />
+            Free to send · 1% to get paid
+          </div>
           <h1
-            className="font-display tracking-tight leading-[1.02]"
+            className="font-display tracking-tight leading-[0.98]"
             style={{
               fontWeight: 800,
-              fontSize: "clamp(2.5rem, 6vw, 4.25rem)",
-              letterSpacing: "-0.02em",
+              fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
+              letterSpacing: "-0.025em",
             }}
           >
-            Invoice free.<br />
-            Get{" "}
-            <span className="relative inline-block">
-              paid
-              <UnderlineDoodle />
-            </span>
-            .
+            Send an invoice in 3 clicks.
           </h1>
-          <p className="mt-6 text-base sm:text-lg text-mute max-w-md leading-relaxed">
-            Send invoices free. Nudge follows up on the unpaid ones so you
-            don&apos;t have to — and takes 1% only when the money lands.
+          <p
+            className="mt-4 font-display leading-[1.05]"
+            style={{
+              fontWeight: 700,
+              fontSize: "clamp(1.35rem, 3vw, 2rem)",
+              color: "var(--color-paid-deep)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            We&apos;ll do the follow-up until you&apos;re paid.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <p className="mt-6 text-base sm:text-lg text-mute max-w-md leading-relaxed">
+            Nudge is your invoicing assistant. Hand it the job — it sends the
+            invoice and chases the client, politely then firmly, until the
+            money lands.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-5">
             <Link
               href="/signin"
-              className="px-6 h-12 inline-flex items-center justify-center rounded-full text-paper text-sm font-semibold transition-colors"
-              style={{ background: "var(--color-coral)" }}
+              className="inline-flex items-center justify-center px-8 text-paper text-sm font-bold uppercase tracking-widest transition-transform active:translate-x-[3px] active:translate-y-[3px]"
+              style={{
+                height: 54,
+                background: "var(--color-paid)",
+                boxShadow: "4px 4px 0 var(--color-ink)",
+              }}
             >
               Start free
             </Link>
             <a
               href="#how-it-works"
-              className="h-12 px-5 inline-flex items-center gap-2 rounded-full text-sm font-medium bg-white"
-              style={{ border: "1.5px solid rgba(10,10,10,0.1)" }}
+              className="font-mono text-[11px] uppercase tracking-widest underline underline-offset-4 hover:text-paid-deep"
             >
-              <span
-                className="w-6 h-6 rounded-full flex items-center justify-center text-paper"
-                style={{ background: "var(--color-ink)" }}
-                aria-hidden
-              >
-                <Play size={11} fill="currentColor" />
-              </span>
               See how it works
             </a>
           </div>
-          <div className="mt-4 flex items-center gap-2">
-            <ArrowDoodle />
-            <span
-              className="text-xs italic"
-              style={{ color: "var(--color-coral-deep)" }}
-            >
-              No credit card required
-            </span>
+          <div className="mt-6 font-mono text-[11px] uppercase tracking-widest text-mute">
+            No card required · set up in minutes
           </div>
         </div>
 
@@ -125,65 +130,15 @@ function Hero() {
   );
 }
 
-function UnderlineDoodle() {
-  return (
-    <svg
-      aria-hidden
-      width="100%"
-      height="14"
-      viewBox="0 0 240 14"
-      preserveAspectRatio="none"
-      className="absolute left-0 right-0"
-      style={{ bottom: -6 }}
-    >
-      <path
-        d="M 4 9 Q 60 1, 120 6 T 236 7"
-        stroke="var(--color-coral)"
-        strokeWidth="4"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
-
-function ArrowDoodle() {
-  return (
-    <svg
-      aria-hidden
-      width="38"
-      height="22"
-      viewBox="0 0 38 22"
-      style={{ color: "var(--color-coral-deep)" }}
-    >
-      <path
-        d="M 4 18 Q 12 4, 30 6"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M 26 3 L 32 6 L 28 11"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
-
 function Footer() {
   return (
     <footer
-      className="px-6 sm:px-10 lg:px-14 py-8"
-      style={{ borderTop: "1px solid rgba(10,10,10,0.08)" }}
+      className="px-6 sm:px-10 lg:px-14 py-6 border-t-[1.5px]"
+      style={{ borderColor: "var(--color-ink)" }}
     >
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-mute">
+      <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-widest text-mute">
         <Wordmark size="sm" />
-        <span>© {new Date().getFullYear()}</span>
+        <span>© {new Date().getFullYear()} — Free to send, 1% to get paid</span>
       </div>
     </footer>
   );

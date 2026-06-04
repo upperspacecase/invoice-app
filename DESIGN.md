@@ -80,6 +80,32 @@ serif for a bold, friendly display face.
 
 ---
 
+## Shape & layout — utilitarian, get-shit-done
+
+The forms are a **work order / spec sheet**, not a soft indie-SaaS app. The colour
+palette is warm; the *shapes* are not.
+
+- **Corners: square.** Radius 0 on cards, buttons, chips, inputs. No `rounded-2xl`,
+  no `rounded-full` pills.
+- **Rules, not shadows.** Structure comes from hard `1.5px` ink borders and dividers
+  (think ruled fields on a form). No soft/blurry drop shadows. The one allowed shadow
+  is a **hard offset block** — `4px 4px 0 var(--color-ink)` (or green) — on primary
+  CTAs and the hero/pricing cards, for weight. Buttons "press" via
+  `active:translate-x-[3px] active:translate-y-[3px]`.
+- **Mono labels.** Every section eyebrow, field label, and meta line is
+  `font-mono`, uppercase, `tracking-widest`, in `text-mute`. Data (amounts, ids,
+  dates, the "DAY 07" log) is mono too.
+- **Hi-vis is a highlighter.** Use `--color-hivis` like a marker on a worksheet —
+  a status chip, a highlighted phrase — never as a fill for big areas.
+- **No decoration.** No doodles, squiggles, blobs, sparkles, paper planes, hand-drawn
+  underlines. Deleted from the landing; do not reintroduce. The dog mascot is the
+  only illustration.
+- **Layout: grid + dividers.** Sections read like a document — labelled rows,
+  internal `1.5px` dividers, dense and aligned. The hero illustration is the invoice
+  itself rendered as a ruled work order with a follow-up log.
+
+---
+
 ## Voice
 
 The mascot talks. Short, warm, tradie-mate, action-first. This is where "nail it and

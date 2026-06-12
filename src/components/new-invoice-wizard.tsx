@@ -433,7 +433,7 @@ function StepSent({
   return (
     <div className="flex flex-col items-center justify-center pt-12 pb-20 text-center">
       <Image
-        src="/brand/nudge-mascot.jpeg"
+        src="/brand/nudge-goblin.png"
         alt="Nudge, your invoicing assistant"
         width={160}
         height={160}

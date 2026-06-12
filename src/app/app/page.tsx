@@ -74,7 +74,7 @@ export default async function LedgerPage() {
       {justPaid && (
         <div className="flex items-center gap-4 border border-rule bg-card p-4 mb-8">
           <Image
-            src="/brand/nudge-mascot.jpeg"
+            src="/brand/nudge-goblin.png"
             alt="Nudge"
             width={56}
             height={56}
@@ -135,7 +135,7 @@ export default async function LedgerPage() {
       {invoices.length === 0 && (
         <div className="flex flex-col items-center text-center py-12">
           <Image
-            src="/brand/nudge-mascot.jpeg"
+            src="/brand/nudge-goblin.png"
             alt="Nudge, your invoicing assistant"
             width={168}
             height={168}

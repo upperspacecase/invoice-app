@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Nudge brand — see DESIGN.md. Ink + warm paper + Paid Green + hi-vis spice. */
-  --color-paper: #fbfaf7; /* warm off-white, NOT cream */
+  /* Nudge brand — green goblin system. Warm cream + dark/bright green + orange
+     spice + pale-yellow energy. Palette from the brand board. */
+  --color-paper: #faf4e9; /* warm cream — matches the brand illustrations */
   --color-card: #ffffff;
-  --color-ink: #1c1f1a; /* warm near-black */
-  --color-mute: rgba(28, 31, 26, 0.58);
-  --color-rule: rgba(28, 31, 26, 0.22);
+  --color-ink: #1e3d2b; /* dark green — primary text + dark UI */
+  --color-mute: rgba(30, 61, 43, 0.62);
+  --color-rule: rgba(30, 61, 43, 0.2);
 
-  --color-paid: #2eb86a; /* hero green: CTAs, PAID, positive */
-  --color-paid-deep: #1f8f50; /* green for text-on-light, hovers */
-  --color-accent: #1f8f50; /* brand accent = deep green (was coral) */
-  --color-hivis: #d4f23c; /* energy accent only — sparingly */
+  --color-paid: #46b36b; /* primary green: CTAs, PAID, positive */
+  --color-paid-deep: #2e7d4f; /* readable green for text-on-cream, hovers */
+  --color-accent: #f39c34; /* orange spice */
+  --color-hivis: #f6f388; /* pale-yellow energy accent — sparingly */
   --color-danger: #c0392b; /* errors / destructive */
 
   /* Utilitarian: square everything by default. rounded-full is left alone so
@@ -26,21 +27,21 @@
 
   /* Compatibility aliases for retired tokens → resolve to the new palette so
      any lingering usage degrades gracefully instead of losing all color. */
-  --color-cream: #fbfaf7;
-  --color-cream-deep: #f1efe8;
-  --color-coral: #2eb86a;
-  --color-coral-soft: #8fe0b4;
-  --color-coral-deep: #1f8f50;
-  --color-sun: #d4f23c;
-  --color-mint: #8fe0b4;
-  --color-sky: #e7eee9;
-  --color-iris: #e7eee9;
-  --color-blush: #f1efe8;
+  --color-cream: #faf4e9;
+  --color-cream-deep: #efe7d5;
+  --color-coral: #46b36b;
+  --color-coral-soft: #c6e8c1;
+  --color-coral-deep: #2e7d4f;
+  --color-sun: #f6f388;
+  --color-mint: #c6e8c1;
+  --color-sky: #eef3ea;
+  --color-iris: #eef3ea;
+  --color-blush: #efe7d5;
 
-  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-dm-sans), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-rokkitt), Georgia, "Times New Roman", serif;
   /* legacy alias: existing `font-serif` usages adopt the new display face */
-  --font-serif: var(--font-bricolage), var(--font-dm-sans), system-ui, sans-serif;
+  --font-serif: var(--font-rokkitt), Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 

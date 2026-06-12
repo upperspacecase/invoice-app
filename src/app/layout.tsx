@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
-import {
-  DM_Sans,
-  Bricolage_Grotesque,
-  JetBrains_Mono,
-} from "next/font/google";
+import { Inter, Rokkitt, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+// Closest free stand-in for the brand's Recoleta headings (the logo itself uses
+// the exact wordmark image). Friendly, rounded, full weight range.
+const rokkitt = Rokkitt({
+  variable: "--font-rokkitt",
   subsets: ["latin"],
 });
 
@@ -35,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${bricolage.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${rokkitt.variable} ${jetbrainsMono.variable}`}
     >
       <body>{children}</body>
     </html>

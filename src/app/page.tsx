@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import { HeroIllustration } from "@/components/landing/hero-illustration";
-import { FeatureCards } from "@/components/landing/feature-cards";
 import { SocialProof } from "@/components/landing/social-proof";
 import { ClosingCTA } from "@/components/landing/closing-cta";
 import { PricingBlock } from "@/components/pricing-block";
@@ -15,7 +15,8 @@ export default function LandingPage() {
       <Nav />
       <main className="flex-1">
         <Hero />
-        <FeatureCards />
+        <MeetNudge />
+        <HowItWorks />
         <SocialProof />
         <PricingBlock />
         <ClosingCTA />
@@ -60,10 +61,7 @@ function Nav() {
 
 function Hero() {
   return (
-    <section
-      id="how-it-works"
-      className="px-6 sm:px-10 lg:px-14 pt-14 sm:pt-20 pb-16 sm:pb-24"
-    >
+    <section className="px-6 sm:px-10 lg:px-14 pt-14 sm:pt-20 pb-16 sm:pb-24">
       <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-mute mb-6 flex items-center gap-2.5">
@@ -114,6 +112,43 @@ function Hero() {
         </div>
 
         <HeroIllustration />
+      </div>
+    </section>
+  );
+}
+
+function MeetNudge() {
+  return (
+    <section className="px-6 sm:px-10 lg:px-14 pb-12 sm:pb-16">
+      <div className="max-w-3xl mx-auto">
+        <Image
+          src="/brand/meet-nudge.png"
+          alt="Meet Nudge. He keeps the admin moving so you can keep doing what you do best."
+          width={666}
+          height={412}
+          className="w-full h-auto"
+          sizes="(max-width: 768px) 100vw, 768px"
+        />
+      </div>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  return (
+    <section
+      id="how-it-works"
+      className="px-6 sm:px-10 lg:px-14 pb-16 sm:pb-20"
+    >
+      <div className="max-w-3xl mx-auto">
+        <Image
+          src="/brand/how-it-works.png"
+          alt="You do the job. Nudge does the follow-up. 1 — You send the invoice. 2 — Nudge sends friendly reminders and keeps track. 3 — You get paid. Nudge says thanks."
+          width={660}
+          height={422}
+          className="w-full h-auto"
+          sizes="(max-width: 768px) 100vw, 768px"
+        />
       </div>
     </section>
   );

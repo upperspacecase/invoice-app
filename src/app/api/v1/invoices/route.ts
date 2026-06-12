@@ -62,6 +62,25 @@ export async function POST(req: Request) {
   if (b.currency !== undefined && !isCurrencyCode(b.currency)) {
     return Response.json({ error: "Bad currency." }, { status: 400 });
   }
+  // Payment terms: either termsDays (int 0–365) or an explicit dueAt (ms,
+  // within a sane window). termsDays wins if both are sent.
+  let termsDays: number | undefined;
+  let dueAt: number | undefined;
+  if (b.termsDays !== undefined) {
+    const t = typeof b.termsDays === "number" ? b.termsDays : NaN;
+    if (!Number.isInteger(t) || t < 0 || t > 365) {
+      return Response.json({ error: "termsDays must be 0–365." }, { status: 400 });
+    }
+    termsDays = t;
+  } else if (b.dueAt !== undefined) {
+    const d = typeof b.dueAt === "number" ? b.dueAt : NaN;
+    const min = Date.now() - 365 * 24 * 60 * 60 * 1000;
+    const max = Date.now() + 2 * 365 * 24 * 60 * 60 * 1000;
+    if (!Number.isFinite(d) || d < min || d > max) {
+      return Response.json({ error: "dueAt is out of range." }, { status: 400 });
+    }
+    dueAt = d;
+  }
 
   const inv = await sendInvoice(auth.uid, {
     clientId: b.clientId,
@@ -71,6 +90,8 @@ export async function POST(req: Request) {
         ? b.description.trim()
         : "Services rendered",
     currency: isCurrencyCode(b.currency) ? (b.currency as CurrencyCode) : undefined,
+    termsDays,
+    dueAt,
     actor: "agent",
   });
   if (!inv) {

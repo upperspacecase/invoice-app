@@ -7,6 +7,7 @@ import {
 } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 
 export {
   SESSION_COOKIE_NAME,
@@ -60,5 +61,16 @@ export function adminAuth(): Auth {
 
 export function adminDb(): Firestore {
   return getFirestore(load());
+}
+
+// Default Storage bucket for uploaded invoice PDFs. The admin SDK bypasses
+// Storage security rules, so server-only access needs no rules file. The
+// bucket name isn't set in initializeApp, so pass it explicitly.
+export function adminBucket() {
+  const name = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  if (!name) {
+    throw new Error("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET env var is missing.");
+  }
+  return getStorage(load()).bucket(name);
 }
 

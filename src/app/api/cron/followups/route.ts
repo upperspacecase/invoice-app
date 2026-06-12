@@ -5,15 +5,9 @@ import {
   listInvoices,
 } from "@/lib/server/store";
 import { sendInvoiceReminder } from "@/lib/server/dispatch";
-import {
-  STAGE_DAYS,
-  MIN_GAP_DAYS,
-  effectiveReminderCount,
-} from "@/lib/followup-cadence";
+import { dueStage } from "@/lib/followup-cadence";
 
 export const runtime = "nodejs";
-
-const DAY = 24 * 60 * 60 * 1000;
 
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -45,18 +39,12 @@ export async function GET(req: Request) {
       processed++;
       const invoices = await listInvoices(uid);
       for (const inv of invoices) {
-        if (inv.status !== "sent") continue;
-        const count = effectiveReminderCount(inv);
-        if (count >= STAGE_DAYS.length) continue; // cadence finished
-        const ageDays = (now - inv.sentAt) / DAY;
-        if (ageDays < STAGE_DAYS[count]) continue; // next stage not due yet
-        if (
-          inv.lastReminderAt &&
-          (now - inv.lastReminderAt) / DAY < MIN_GAP_DAYS
-        ) {
-          continue; // sent one too recently
-        }
-        const result = await sendInvoiceReminder(uid, inv.id, "agent");
+        // One email at the deepest stage that's come due (heads-up before the
+        // due date; polite/firm/final after). dueStage handles the finished,
+        // not-yet-due, min-gap, and paid cases.
+        const stage = dueStage(inv, now);
+        if (stage === null) continue;
+        const result = await sendInvoiceReminder(uid, inv.id, "agent", stage);
         if (result) reminded++;
       }
     } catch (e) {

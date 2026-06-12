@@ -39,9 +39,22 @@ export type Invoice = {
   date: string;
   status: InvoiceStatus;
   sentAt: number;
+  // When payment is due, in ms. Drives the whole chase cadence. Always present
+  // on read (normaliseInvoice backfills sentAt + 14d for legacy docs).
+  dueAt: number;
   paidAt?: number;
   lastReminderAt?: number;
   reminderCount?: number;
+  // The deepest cadence stage already sent (0 heads-up … 3 final). The cron
+  // sends the next stage only when a deeper one has come due than this.
+  lastStage?: number;
+  // "created" = built in Nudge; "uploaded" = tradie's own PDF. Default created.
+  source?: "created" | "uploaded";
+  // Storage path of the uploaded PDF (uploaded invoices only).
+  pdfPath?: string;
+  // The tradie's own invoice number (e.g. "#1268"); shown via displayId().
+  // Internal `id` stays INV-xxx for routing.
+  externalNumber?: string;
   paymentLinkUrl?: string;
   stripePaymentLinkId?: string;
   // 1% (annual-capped) platform fee attached to this invoice's pay link, in
@@ -51,8 +64,8 @@ export type Invoice = {
   platformFeeRecorded?: boolean;
 };
 
-// Follow-up cadence stages: 1 polite, 2 firm, 3 final.
-export type FollowupStage = 1 | 2 | 3;
+// Follow-up cadence stages: 0 pre-due heads-up, 1 polite, 2 firm, 3 final.
+export type FollowupStage = 0 | 1 | 2 | 3;
 
 export type ApiKey = {
   id: string;

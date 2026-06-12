@@ -1,6 +1,8 @@
 import { apiAuthError, authenticateEither } from "@/lib/server/auth";
 import { getBusiness, getInvoice } from "@/lib/server/store";
 import { renderInvoicePdf } from "@/lib/pdf/invoice-pdf";
+import { adminBucket } from "@/lib/firebase/admin";
+import { displayId } from "@/lib/invoice-display";
 
 export const runtime = "nodejs";
 
@@ -18,16 +20,29 @@ export async function GET(
   if (!invoice) {
     return Response.json({ error: "Invoice not found." }, { status: 404 });
   }
-  const buffer = await renderInvoicePdf({
-    business,
-    invoice,
-    paymentLinkUrl: invoice.paymentLinkUrl,
-  });
+  // Uploaded invoices serve the tradie's own stored PDF; fall back to rendering
+  // if the stored file is missing.
+  let buffer: Buffer | null = null;
+  if (invoice.pdfPath) {
+    try {
+      [buffer] = await adminBucket().file(invoice.pdfPath).download();
+    } catch {
+      buffer = null;
+    }
+  }
+  if (!buffer) {
+    buffer = await renderInvoicePdf({
+      business,
+      invoice,
+      paymentLinkUrl: invoice.paymentLinkUrl,
+    });
+  }
+  const filename = `${displayId(invoice)}.pdf`.replace(/[^\w.#-]/g, "_");
   return new Response(new Uint8Array(buffer), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${invoice.id}.pdf"`,
+      "Content-Disposition": `inline; filename="${filename}"`,
       "Cache-Control": "private, max-age=300",
     },
   });

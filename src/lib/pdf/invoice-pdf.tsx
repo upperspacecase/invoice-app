@@ -8,6 +8,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { formatMoney } from "@/lib/currency";
+import { displayId } from "@/lib/invoice-display";
 import type { Business, Invoice } from "@/lib/types";
 
 const styles = StyleSheet.create({
@@ -142,7 +143,7 @@ export function InvoicePdf({
 }: InvoicePdfInput) {
   const accent = business.brandColor || "#0a0a0a";
   const issued = new Date(invoice.sentAt);
-  const due = new Date(invoice.sentAt + 14 * 24 * 60 * 60 * 1000);
+  const due = new Date(invoice.dueAt);
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -158,7 +159,7 @@ export function InvoicePdf({
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={styles.invoiceLabel}>Invoice</Text>
-            <Text style={styles.invoiceNumber}>{invoice.id}</Text>
+            <Text style={styles.invoiceNumber}>{displayId(invoice)}</Text>
             <Text style={styles.metaMuted}>
               Issued {issued.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </Text>

@@ -13,7 +13,11 @@ import {
   updateBusiness,
   updateClient,
 } from "@/lib/server/store";
-import { sendInvoice, sendInvoiceReminder } from "@/lib/server/dispatch";
+import {
+  registerUploadedInvoice,
+  sendInvoice,
+  sendNextReminder,
+} from "@/lib/server/dispatch";
 import { requireSession } from "@/lib/server/auth";
 import { isCurrencyCode } from "@/lib/currency";
 import type { AutomationId, Business, CurrencyCode } from "@/lib/types";
@@ -95,12 +99,21 @@ export async function createInvoiceAction(input: {
   amount: number;
   description: string;
   currency?: CurrencyCode;
+  termsDays?: number;
 }) {
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     throw new Error("Amount must be > 0");
   }
   if (input.currency && !isCurrencyCode(input.currency)) {
     throw new Error("Bad currency");
+  }
+  if (
+    input.termsDays != null &&
+    (!Number.isInteger(input.termsDays) ||
+      input.termsDays < 0 ||
+      input.termsDays > 365)
+  ) {
+    throw new Error("Bad payment terms");
   }
   const { uid } = await requireSession();
   const inv = await sendInvoice(uid, input);
@@ -119,8 +132,46 @@ export async function markInvoicePaidAction(id: string) {
 
 export async function remindInvoiceAction(id: string) {
   const { uid } = await requireSession();
-  const inv = await sendInvoiceReminder(uid, id, "you");
+  const inv = await sendNextReminder(uid, id, "you");
   if (!inv) throw new Error("Invoice not found");
+  refreshAll();
+  return inv;
+}
+
+// ---------- uploaded invoices ----------
+
+export async function registerUploadedInvoiceAction(input: {
+  clientId?: string;
+  newClient?: { name: string; email: string };
+  amount: number;
+  currency?: CurrencyCode;
+  description: string;
+  dueAt: number;
+  externalNumber?: string;
+  uploadId: string;
+  alreadySent: boolean;
+  sentAt?: number;
+}) {
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error("Amount must be > 0");
+  }
+  if (!Number.isFinite(input.dueAt)) throw new Error("A due date is required");
+  if (input.currency && !isCurrencyCode(input.currency)) {
+    throw new Error("Bad currency");
+  }
+  if (!input.clientId && !input.newClient) {
+    throw new Error("Pick or add a client");
+  }
+  if (input.newClient && (!input.newClient.name.trim() || !input.newClient.email.trim())) {
+    throw new Error("Client name and email are required");
+  }
+  if (input.alreadySent && !Number.isFinite(input.sentAt)) {
+    throw new Error("When did you send it? A sent date is required");
+  }
+  if (!input.uploadId) throw new Error("Upload the PDF first");
+  const { uid } = await requireSession();
+  const inv = await registerUploadedInvoice(uid, input);
+  if (!inv) throw new Error("Could not register the invoice");
   refreshAll();
   return inv;
 }

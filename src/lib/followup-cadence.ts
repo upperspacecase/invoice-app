@@ -1,36 +1,111 @@
-import type { Invoice } from "./types";
+import type { FollowupStage, Invoice } from "./types";
 
 const DAY = 24 * 60 * 60 * 1000;
 
-// Days since the invoice was sent that each stage fires at:
-// stage 1 (polite) @ 7, stage 2 (firm) @ 14, stage 3 (final) @ 30. Stops after 3.
-export const STAGE_DAYS = [7, 14, 30];
+// Cadence keyed on the invoice's DUE date (not its send date):
+//   stage 0 — friendly heads-up at dueAt - 3d (only when there's lead time)
+//   stage 1 — follow-up      at dueAt + 3d
+//   stage 2 — firmer nudge   at dueAt + 14d
+//   stage 3 — final notice   at dueAt + 30d
+// This matches the schedule the landing page promises. Stops after stage 3 or
+// when the invoice is paid.
+export const HEADS_UP_DAYS_BEFORE_DUE = 3;
+export const HEADS_UP_MIN_LEAD_DAYS = 3; // skip the heads-up unless it lands ≥3d after send
+export const OVERDUE_STAGE_DAYS = [3, 14, 30]; // stages 1..3, days after dueAt
 export const MIN_GAP_DAYS = 5; // never fire two stages within this window
+export const FINAL_STAGE = 3;
 
-// How many reminders have effectively been sent. A legacy invoice that only
-// recorded lastReminderAt (no count) is treated as stage 1 already sent —
-// mirrors the cron's original fallback so predictions match what it will do.
-export function effectiveReminderCount(inv: Invoice): number {
-  return inv.reminderCount ?? (inv.lastReminderAt ? 1 : 0);
+// Payment-terms picker (days from today → dueAt). 0 = "On receipt".
+export const DEFAULT_TERMS_DAYS = 14;
+export const TERMS_OPTIONS = [0, 7, 14, 30];
+
+const STAGE_LABEL: Record<FollowupStage, string> = {
+  0: "Friendly reminder",
+  1: "Follow-up",
+  2: "Firmer nudge",
+  3: "Final notice",
+};
+
+export function stageLabel(stage: FollowupStage): string {
+  return STAGE_LABEL[stage];
 }
 
-// When the agent will next follow up, or null if the cadence is finished /
-// the invoice isn't in a chaseable state. This is the cron's gate logic
-// inverted into a prediction (the scheduled due time = the later of the
-// age gate and the min-gap gate), so the two never disagree.
+// Scheduled time for a given stage of a given invoice.
+export function stageAt(inv: Pick<Invoice, "dueAt">, stage: FollowupStage): number {
+  if (stage === 0) return inv.dueAt - HEADS_UP_DAYS_BEFORE_DUE * DAY;
+  return inv.dueAt + OVERDUE_STAGE_DAYS[stage - 1] * DAY;
+}
+
+// The heads-up only makes sense when the invoice was sent well before its due
+// date — otherwise it would land moments after the invoice itself.
+export function headsUpEligible(inv: Pick<Invoice, "dueAt" | "sentAt">): boolean {
+  return stageAt(inv, 0) - inv.sentAt >= HEADS_UP_MIN_LEAD_DAYS * DAY;
+}
+
+// Deepest stage already sent (-1 = none). Reads lastStage; falls back to the
+// legacy reminderCount/lastReminderAt for docs written before lastStage
+// existed (old stages 1/2/3 map 1:1; heads-up never existed then).
+export function effectiveLastStage(inv: Invoice): number {
+  if (typeof inv.lastStage === "number") return inv.lastStage;
+  if (inv.reminderCount) return Math.min(inv.reminderCount, FINAL_STAGE);
+  if (inv.lastReminderAt) return 1;
+  return -1;
+}
+
+// The deepest stage whose scheduled time has passed as of `now`, skipping an
+// ineligible heads-up. -1 if nothing is due yet.
+export function deepestDueStage(inv: Invoice, now: number): number {
+  let deepest = -1;
+  for (let stage = 0 as FollowupStage; stage <= FINAL_STAGE; stage++) {
+    if (stage === 0 && !headsUpEligible(inv)) continue;
+    if (now >= stageAt(inv, stage)) deepest = stage;
+  }
+  return deepest;
+}
+
+// The stage the cron should send next for this invoice as of `now`, or null if
+// nothing is owed. Single source of truth shared by the cron and the manual
+// "remind now" path so predictions and behaviour never disagree.
+export function dueStage(inv: Invoice, now: number): FollowupStage | null {
+  if (inv.status !== "sent") return null;
+  const last = effectiveLastStage(inv);
+  if (last >= FINAL_STAGE) return null;
+  const target = deepestDueStage(inv, now);
+  if (target <= last) return null;
+  if (inv.lastReminderAt && now - inv.lastReminderAt < MIN_GAP_DAYS * DAY) {
+    return null; // sent one too recently
+  }
+  return target as FollowupStage;
+}
+
+// When the agent will next follow up, or null if finished/not chaseable. The
+// scheduled time of the next un-sent eligible stage, floored by the min-gap.
 export function nextNudgeAt(inv: Invoice): number | null {
   if (inv.status !== "sent") return null;
-  const count = effectiveReminderCount(inv);
-  if (count >= STAGE_DAYS.length) return null;
-  const dueByAge = inv.sentAt + STAGE_DAYS[count] * DAY;
+  const last = effectiveLastStage(inv);
+  let next: FollowupStage | null = null;
+  for (let stage = (last + 1) as FollowupStage; stage <= FINAL_STAGE; stage++) {
+    if (stage === 0 && !headsUpEligible(inv)) continue;
+    next = stage;
+    break;
+  }
+  if (next === null) return null;
+  const dueByTime = stageAt(inv, next);
   const dueByGap = inv.lastReminderAt ? inv.lastReminderAt + MIN_GAP_DAYS * DAY : 0;
-  return Math.max(dueByAge, dueByGap);
+  return Math.max(dueByTime, dueByGap);
 }
 
-// The three scheduled chase dates for a freshly-sent invoice, used on the
-// send-confirmation screen to show the tradie the plan.
-export function chasePlanDates(sentAt: number): number[] {
-  return STAGE_DAYS.map((d) => sentAt + d * DAY);
+export type ChaseStep = { stage: FollowupStage; label: string; at: number };
+
+// The full plan for an invoice, used on the send/upload confirmation screen.
+// Filters out an ineligible heads-up.
+export function chasePlan(inv: Pick<Invoice, "dueAt" | "sentAt">): ChaseStep[] {
+  const steps: ChaseStep[] = [];
+  for (let stage = 0 as FollowupStage; stage <= FINAL_STAGE; stage++) {
+    if (stage === 0 && !headsUpEligible(inv)) continue;
+    steps.push({ stage, label: STAGE_LABEL[stage], at: stageAt(inv, stage) });
+  }
+  return steps;
 }
 
 export function formatChaseDate(at: number): string {
@@ -66,30 +141,25 @@ export function relativeTime(at: number): string {
 }
 
 // The line shown under each ledger row describing what the agent is doing.
-// Returns null when there's nothing to say (e.g. a paid invoice — the row
-// already shows its paid state elsewhere).
+// Returns null when there's nothing to say.
 export function chaseLine(inv: Invoice, agentActive: boolean): string | null {
   if (inv.status === "paid") return "Paid — good as gold";
-  const count = effectiveReminderCount(inv);
   if (!agentActive) return "Chasing paused";
-  if (count >= STAGE_DAYS.length) {
+  const last = effectiveLastStage(inv);
+  if (last >= FINAL_STAGE) {
     const when = inv.lastReminderAt ? formatChaseDate(inv.lastReminderAt) : null;
     return when ? `Final notice sent ${when}` : "Final notice sent";
   }
+  const now = Date.now();
   const next = nextNudgeAt(inv);
+  // Pre-due: reassure, don't threaten.
+  if (now < inv.dueAt) {
+    if (last === 0) return `Heads-up sent — due ${formatChaseDate(inv.dueAt)}`;
+    return `Due ${formatChaseDate(inv.dueAt)}`;
+  }
+  // Overdue.
   if (next === null) return null;
-  const when = formatChaseDate(next);
-  const overdue = next <= Date.now();
-  if (count === 0) {
-    return overdue ? "Follow-up due — Nudge is on it" : `Nudge follows up ${when}`;
-  }
-  if (count === 1) {
-    return overdue
-      ? "Follow-up due — Nudge is on it"
-      : `Nudged once — follows up ${when}`;
-  }
-  // count === 2
-  return overdue
-    ? "Final notice due — Nudge is on it"
-    : `Nudged twice — final notice ${when}`;
+  if (next <= now) return "Overdue — Nudge is on it";
+  const nextStage = Math.min(last + 1, FINAL_STAGE) as FollowupStage;
+  return `Overdue — ${STAGE_LABEL[nextStage].toLowerCase()} ${formatChaseDate(next)}`;
 }

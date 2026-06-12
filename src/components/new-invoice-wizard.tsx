@@ -12,15 +12,35 @@ import {
   Send,
 } from "lucide-react";
 import { CURRENCIES, formatMoney, symbolFor } from "@/lib/currency";
-import { chasePlanDates, formatChaseDate } from "@/lib/followup-cadence";
-import type { Business, Client, CurrencyCode } from "@/lib/types";
+import {
+  chasePlan,
+  formatChaseDate,
+  DEFAULT_TERMS_DAYS,
+  TERMS_OPTIONS,
+} from "@/lib/followup-cadence";
+import { netPreview } from "@/lib/fee-preview";
+import type { Business, Client, CurrencyCode, Invoice } from "@/lib/types";
 import { createInvoiceAction } from "@/app/_actions";
+
+const DAY = 24 * 60 * 60 * 1000;
+
+function termsLabel(days: number): string {
+  if (days === 0) return "On receipt";
+  return `${days} days`;
+}
+
+// Module-level (not in render scope) so the Date.now() read is allowed.
+function dueLabelForTerms(termsDays: number): string {
+  if (termsDays === 0) return "Due on receipt";
+  return `Due ${formatChaseDate(Date.now() + termsDays * DAY)}`;
+}
 
 type Draft = {
   client: Client | null;
   amount: string;
   description: string;
   currency: CurrencyCode;
+  termsDays: number;
 };
 
 type Step = 0 | 1 | 2 | 3;
@@ -41,12 +61,12 @@ export function NewInvoiceWizard({
     amount: "",
     description: "",
     currency: business.currency,
+    termsDays: DEFAULT_TERMS_DAYS,
   });
   const [showCurrency, setShowCurrency] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [sentInvoiceId, setSentInvoiceId] = useState<string | null>(null);
-  const [sentAt, setSentAt] = useState<number | null>(null);
+  const [sent, setSent] = useState<Invoice | null>(null);
 
   function handleBack() {
     if (step === 0 || step === 3) {
@@ -78,9 +98,9 @@ export function NewInvoiceWizard({
           amount,
           description: draft.description || "Services rendered",
           currency: draft.currency,
+          termsDays: draft.termsDays,
         });
-        setSentInvoiceId(inv.id);
-        setSentAt(Date.now());
+        setSent(inv);
         setStep(3);
         router.refresh();
       } catch (e) {
@@ -137,14 +157,11 @@ export function NewInvoiceWizard({
         />
       )}
 
-      {step === 3 && draft.client && (
+      {step === 3 && draft.client && sent && (
         <StepSent
-          amount={parseFloat(draft.amount || "0")}
-          currency={draft.currency}
+          invoice={sent}
           clientName={draft.client.name}
           agentActive={agentActive}
-          sentAt={sentAt ?? 0}
-          invoiceId={sentInvoiceId}
           onDone={() => router.push("/app")}
         />
       )}
@@ -278,6 +295,30 @@ function StepAmount({
         className="w-full bg-transparent outline-none border-b border-rule pb-2 text-base focus:border-ink/40"
       />
 
+      <div className="text-xs uppercase tracking-widest text-mute mb-2 mt-8">
+        Payment terms
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {TERMS_OPTIONS.map((days) => {
+          const active = draft.termsDays === days;
+          return (
+            <button
+              key={days}
+              type="button"
+              onClick={() => setDraft((d) => ({ ...d, termsDays: days }))}
+              className="px-3.5 py-2 rounded-full border text-sm transition-colors"
+              style={{
+                borderColor: active ? "var(--color-ink)" : "var(--color-rule)",
+                background: active ? "var(--color-ink)" : "transparent",
+                color: active ? "var(--color-paper)" : "var(--color-ink)",
+              }}
+            >
+              {termsLabel(days)}
+            </button>
+          );
+        })}
+      </div>
+
       <button
         type="button"
         onClick={onNext}
@@ -305,6 +346,8 @@ function StepPreview({
   onSend: () => void;
 }) {
   const amount = parseFloat(draft.amount || "0");
+  const dueLabel = dueLabelForTerms(draft.termsDays);
+  const fees = netPreview(amount, draft.currency);
 
   return (
     <div>
@@ -337,7 +380,7 @@ function StepPreview({
             </div>
             <div className="font-mono text-lg mt-1">DRAFT</div>
           </div>
-          <div className="text-xs text-mute">Due in 14 days</div>
+          <div className="text-xs text-mute">{dueLabel}</div>
         </div>
 
         <Block label="From">
@@ -372,6 +415,26 @@ function StepPreview({
           Pay via: {business.payment}
         </div>
       </div>
+
+      {amount > 0 && (
+        <div
+          className="mt-4 px-4 py-3 rounded-xl border border-rule bg-card text-[13px] leading-relaxed"
+        >
+          You&apos;ll receive{" "}
+          <span
+            className="font-mono font-semibold"
+            style={{ color: "var(--color-paid-deep)" }}
+          >
+            ~{formatMoney(fees.net, draft.currency)}
+          </span>{" "}
+          after card fees{" "}
+          <span className="text-mute">
+            (Stripe ~{formatMoney(fees.stripe, draft.currency)} · Nudge{" "}
+            {formatMoney(fees.nudge, draft.currency)})
+          </span>
+          . Your client pays {formatMoney(amount, draft.currency)} in full.
+        </div>
+      )}
 
       {error && (
         <div className="mt-4 text-xs text-danger">{error}</div>
@@ -408,28 +471,20 @@ function Block({
 }
 
 function StepSent({
-  amount,
-  currency,
+  invoice,
   clientName,
   agentActive,
-  sentAt,
-  invoiceId,
   onDone,
 }: {
-  amount: number;
-  currency: CurrencyCode;
+  invoice: Invoice;
   clientName: string;
   agentActive: boolean;
-  sentAt: number;
-  invoiceId: string | null;
   onDone: () => void;
 }) {
-  const plan = chasePlanDates(sentAt);
-  const planRows: { label: string; at: number }[] = [
-    { label: "Polite nudge", at: plan[0] },
-    { label: "Firm follow-up", at: plan[1] },
-    { label: "Final notice", at: plan[2] },
-  ];
+  const amount = invoice.amount;
+  const currency = invoice.currency;
+  const planRows = chasePlan(invoice);
+  const invoiceId = invoice.id;
   return (
     <div className="flex flex-col items-center justify-center pt-12 pb-20 text-center">
       <Image
@@ -456,7 +511,7 @@ function StepSent({
           </div>
           {planRows.map((row, i) => (
             <div
-              key={row.label}
+              key={row.stage}
               className={`px-4 py-2.5 flex items-center justify-between text-sm ${
                 i < planRows.length - 1 ? "border-b border-rule" : ""
               }`}

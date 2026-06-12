@@ -2,13 +2,16 @@ import "server-only";
 import { Resend } from "resend";
 import { formatMoney } from "@/lib/currency";
 import { renderInvoicePdf } from "@/lib/pdf/invoice-pdf";
+import { displayId } from "@/lib/invoice-display";
 import { draftFollowupBody } from "./followup-copy";
 import type { Business, FollowupStage, Invoice } from "@/lib/types";
 
-function clampStage(n: number): FollowupStage {
-  if (n >= 3) return 3;
-  if (n <= 1) return 1;
-  return 2;
+export function formatDueDate(at: number): string {
+  return new Date(at).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export type EmailResult =
@@ -30,6 +33,8 @@ export type SendInput = {
   replyTo?: string;
   paymentLinkUrl?: string;
   publicPdfUrl?: string;
+  // Uploaded invoices attach the tradie's own PDF instead of a generated one.
+  pdfOverride?: Buffer;
 };
 
 export async function sendInvoiceEmail(
@@ -53,14 +58,15 @@ export async function sendInvoiceEmail(
   }
 
   const { business, invoice } = input;
-  const subject = `Invoice ${invoice.id} from ${business.name}`;
+  const docId = displayId(invoice);
+  const subject = `Invoice ${docId} from ${business.name}`;
   const total = formatMoney(invoice.amount, invoice.currency, {
     withCode: true,
   });
   const lines = [
     `Hi ${invoice.clientName.split(/[\s,]+/)[0] || "there"},`,
     "",
-    `Here's invoice ${invoice.id} for ${total}.`,
+    `Here's invoice ${docId} for ${total}, due ${formatDueDate(invoice.dueAt)}.`,
     invoice.description ? `For: ${invoice.description}` : "",
     "",
     input.paymentLinkUrl ? `Pay now: ${input.paymentLinkUrl}` : "",
@@ -78,18 +84,22 @@ export async function sendInvoiceEmail(
   const html = textToHtml(lines, business.brandColor);
 
   let pdf: Buffer;
-  try {
-    pdf = await renderInvoicePdf({
-      business,
-      invoice,
-      paymentLinkUrl: input.paymentLinkUrl,
-    });
-  } catch (e) {
-    return {
-      ok: false,
-      reason: "failed",
-      detail: e instanceof Error ? e.message : "PDF render failed",
-    };
+  if (input.pdfOverride) {
+    pdf = input.pdfOverride;
+  } else {
+    try {
+      pdf = await renderInvoicePdf({
+        business,
+        invoice,
+        paymentLinkUrl: input.paymentLinkUrl,
+      });
+    } catch (e) {
+      return {
+        ok: false,
+        reason: "failed",
+        detail: e instanceof Error ? e.message : "PDF render failed",
+      };
+    }
   }
 
   try {
@@ -102,7 +112,7 @@ export async function sendInvoiceEmail(
       html,
       attachments: [
         {
-          filename: `${invoice.id}.pdf`,
+          filename: `${docId}.pdf`.replace(/[^\w.#-]/g, "_"),
           content: pdf,
         },
       ],
@@ -129,6 +139,8 @@ export async function sendReminderEmail(input: {
   invoice: Invoice;
   replyTo?: string;
   paymentLinkUrl?: string;
+  stage: FollowupStage;
+  attachment?: { filename: string; content: Buffer };
 }): Promise<EmailResult> {
   const resend = getClient();
   if (!resend) {
@@ -147,14 +159,16 @@ export async function sendReminderEmail(input: {
     };
   }
 
-  const { business, invoice } = input;
-  const stage = clampStage(invoice.reminderCount ?? 1);
+  const { business, invoice, stage } = input;
+  const docId = displayId(invoice);
   const subject =
-    stage === 1
-      ? `Friendly reminder: invoice ${invoice.id} from ${business.name}`
+    stage === 0
+      ? `Heads-up: invoice ${docId} from ${business.name} is due ${formatDueDate(invoice.dueAt)}`
+      : stage === 1
+      ? `Friendly reminder: invoice ${docId} from ${business.name}`
       : stage === 2
-      ? `Following up: invoice ${invoice.id} from ${business.name}`
-      : `Final notice: invoice ${invoice.id} from ${business.name}`;
+      ? `Following up: invoice ${docId} from ${business.name}`
+      : `Final notice: invoice ${docId} from ${business.name}`;
   // Nudge writes the message as the assistant (LLM when configured, staged
   // template otherwise); we own the pay link + payment lines + sign-off.
   const body = await draftFollowupBody({ business, invoice, stage });
@@ -181,6 +195,7 @@ export async function sendReminderEmail(input: {
       subject,
       text: lines,
       html: textToHtml(lines, business.brandColor),
+      ...(input.attachment ? { attachments: [input.attachment] } : {}),
     });
     if (result.error) {
       return { ok: false, reason: "failed", detail: result.error.message };

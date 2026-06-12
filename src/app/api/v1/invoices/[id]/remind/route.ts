@@ -1,5 +1,5 @@
 import { apiAuthError, authenticateApi } from "@/lib/server/auth";
-import { sendInvoiceReminder } from "@/lib/server/dispatch";
+import { sendNextReminder } from "@/lib/server/dispatch";
 
 export async function POST(
   req: Request,
@@ -8,7 +8,7 @@ export async function POST(
   const auth = await authenticateApi(req);
   if (!auth.ok) return apiAuthError(auth);
   const { id } = await ctx.params;
-  const inv = await sendInvoiceReminder(auth.uid, id, "agent");
+  const inv = await sendNextReminder(auth.uid, id, "agent");
   if (!inv) {
     return Response.json({ error: "Invoice not found." }, { status: 404 });
   }

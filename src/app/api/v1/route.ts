@@ -10,9 +10,9 @@ export async function GET() {
       "GET /api/v1/invoices":
         "List invoices. Query: status=sent|paid, clientId, limit.",
       "POST /api/v1/invoices":
-        "Create + send an invoice. Body: { clientId, amount, description?, currency? }.",
+        "Create + send an invoice. Body: { clientId, amount, description?, currency?, termsDays? (0-365, default 14) | dueAt? (ms) }.",
       "POST /api/v1/invoices/{id}/remind":
-        "Send a reminder for an unpaid invoice.",
+        "Send the next due reminder stage for an unpaid invoice.",
       "POST /api/v1/invoices/{id}/paid":
         "Mark an invoice as paid.",
       "GET /api/v1/invoices/{id}/pdf":

@@ -11,8 +11,10 @@ import type {
   Business,
   Client,
   CurrencyCode,
+  FollowupStage,
   Invoice,
 } from "../types";
+import { displayId } from "../invoice-display";
 import {
   formatLabel,
   initialAutomations,
@@ -243,6 +245,17 @@ function normaliseInvoice(id: string, data: Record<string, unknown>): Invoice {
     date: String(data.date ?? ""),
     status: data.status === "paid" ? "paid" : "sent",
     sentAt: fromTimestamp(data.sentAt),
+    // Backfill legacy invoices to sentAt + 14d (the old hardcoded "Due in 14
+    // days"). New thresholds fire later than the old ones, so no double-send.
+    dueAt: data.dueAt
+      ? fromTimestamp(data.dueAt)
+      : fromTimestamp(data.sentAt) + 14 * 24 * 60 * 60 * 1000,
+    lastStage:
+      typeof data.lastStage === "number" ? data.lastStage : undefined,
+    source: data.source === "uploaded" ? "uploaded" : undefined,
+    pdfPath: typeof data.pdfPath === "string" ? data.pdfPath : undefined,
+    externalNumber:
+      typeof data.externalNumber === "string" ? data.externalNumber : undefined,
     paidAt: data.paidAt ? fromTimestamp(data.paidAt) : undefined,
     lastReminderAt: data.lastReminderAt
       ? fromTimestamp(data.lastReminderAt)
@@ -302,11 +315,17 @@ async function nextInvoiceId(uid: string): Promise<string> {
   return `INV-${String(max + 1).padStart(3, "0")}`;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 type CreateInvoiceInput = {
   clientId: string;
   amount: number;
   description: string;
   currency?: CurrencyCode;
+  dueAt?: number;
+  sentAt?: number; // override for uploaded invoices already sent earlier
+  source?: "created" | "uploaded";
+  externalNumber?: string;
   actor?: ActivityActor;
 };
 
@@ -319,6 +338,8 @@ export async function createInvoice(
   const currency = input.currency ?? client.currency;
   const id = await nextInvoiceId(uid);
   const now = Date.now();
+  const sentAt = input.sentAt != null ? Math.min(input.sentAt, now) : now;
+  const dueAt = input.dueAt ?? sentAt + 14 * DAY_MS;
   const invoice: Invoice = {
     id,
     clientId: client.id,
@@ -327,14 +348,18 @@ export async function createInvoice(
     amount: input.amount,
     currency,
     description: input.description,
-    date: formatLabel(now),
+    date: formatLabel(sentAt),
     status: "sent",
-    sentAt: now,
+    sentAt,
+    dueAt,
+    ...(input.source ? { source: input.source } : {}),
+    ...(input.externalNumber ? { externalNumber: input.externalNumber } : {}),
   };
   const batch = adminDb().batch();
   batch.set(invoicesCol(uid).doc(id), {
     ...invoice,
-    sentAt: Timestamp.fromMillis(now),
+    sentAt: Timestamp.fromMillis(sentAt),
+    dueAt: Timestamp.fromMillis(dueAt),
     paidAt: null,
   });
   batch.set(
@@ -378,10 +403,18 @@ export async function markInvoicePaid(
   return { ...inv, status: "paid", paidAt: now };
 }
 
+const REMIND_META: Record<FollowupStage, string> = {
+  0: "heads-up before due",
+  1: "polite follow-up",
+  2: "firm follow-up",
+  3: "final notice",
+};
+
 export async function remindInvoice(
   uid: string,
   id: string,
-  actor: ActivityActor = "agent"
+  actor: ActivityActor = "agent",
+  stage: FollowupStage = 1
 ): Promise<Invoice | null> {
   const ref = invoicesCol(uid).doc(id);
   const snap = await ref.get();
@@ -391,18 +424,16 @@ export async function remindInvoice(
   const now = Date.now();
   const reminderCount = (inv.reminderCount ?? 0) + 1;
   await ref.set(
-    { lastReminderAt: Timestamp.fromMillis(now), reminderCount },
+    { lastReminderAt: Timestamp.fromMillis(now), reminderCount, lastStage: stage },
     { merge: true }
   );
-  const stageLabel =
-    reminderCount >= 3 ? "final notice" : reminderCount === 2 ? "firm" : "polite";
   await pushActivity(
     uid,
     actor,
-    `Nudged ${inv.clientName} on ${id}`,
-    `${stageLabel} follow-up`
+    `Nudged ${displayId(inv)} — ${inv.clientName}`,
+    REMIND_META[stage]
   );
-  return { ...inv, lastReminderAt: now, reminderCount };
+  return { ...inv, lastReminderAt: now, reminderCount, lastStage: stage };
 }
 
 // ---------- platform fee cap (per business, per calendar year) ----------

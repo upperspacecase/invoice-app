@@ -1,7 +1,7 @@
 import "server-only";
 import { getStripe } from "./client";
 import { currencyMeta } from "@/lib/currency";
-import { PLATFORM_FEE_RATE } from "@/lib/platform-fee";
+import { PLATFORM_FEE_RATE, clampFeeMinor } from "@/lib/platform-fee";
 import type { Business, Invoice } from "@/lib/types";
 
 export type LinkResult =
@@ -45,13 +45,8 @@ export async function createInvoicePaymentLink(input: {
 
     // 1% of the invoice in minor units, clamped to the remaining annual cap
     // room. Omitted from the link when it rounds to 0 (cap already reached).
-    const onePercent = Math.round(
-      input.invoice.amount * PLATFORM_FEE_RATE * scale
-    );
-    const feeMinor =
-      input.maxFeeMinor != null
-        ? Math.max(0, Math.min(onePercent, input.maxFeeMinor))
-        : onePercent;
+    const onePercent = input.invoice.amount * PLATFORM_FEE_RATE * scale;
+    const feeMinor = clampFeeMinor(onePercent, input.maxFeeMinor);
 
     const product = await stripe.products.create(
       {

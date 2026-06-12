@@ -6,6 +6,7 @@ import { getWorkspace } from "@/lib/server/store";
 import { getRates, convertSync } from "@/lib/fx";
 import { formatMoney } from "@/lib/currency";
 import { chaseLine, relativeTime, paidWithin } from "@/lib/followup-cadence";
+import { displayId } from "@/lib/invoice-display";
 import type { CurrencyCode, Invoice } from "@/lib/types";
 
 const PAID_CELEBRATION_WINDOW = 72 * 60 * 60 * 1000;
@@ -175,7 +176,7 @@ export default async function LedgerPage() {
                   {inv.clientName}
                 </div>
                 <div className="text-xs text-mute mt-0.5 truncate">
-                  {inv.id} · {inv.date}
+                  {displayId(inv)} · {inv.date}
                 </div>
                 {chase && (
                   <div

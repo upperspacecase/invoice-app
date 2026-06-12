@@ -13,7 +13,7 @@ export const initialAutomations: Automation[] = [
   {
     id: "auto-remind",
     title: "Auto-remind unpaid invoices",
-    body: "Send a follow-up if an invoice is still unpaid after 7 days.",
+    body: "Chase unpaid invoices around their due date — a friendly heads-up before, firmer follow-ups after.",
     enabled: true,
   },
 ];

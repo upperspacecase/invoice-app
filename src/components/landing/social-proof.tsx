@@ -12,8 +12,8 @@ export function SocialProof() {
             letterSpacing: "-0.01em",
           }}
         >
-          Built for tradies who&apos;d rather be on the tools than chasing
-          invoices.
+          Built for tradies who&apos;d rather be on the tools than writing
+          &ldquo;just following up on this&hellip;&rdquo; for the third time.
         </p>
         <p className="mt-5 text-base sm:text-lg text-mute">
           <span

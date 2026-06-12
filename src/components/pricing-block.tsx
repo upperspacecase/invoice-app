@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 
-// One offer, one card. Free to send; 1% only when an invoice gets paid (capped
-// at $2,000/yr). Utilitarian: hard ink rules, square corners, mono labels.
+// One offer, one card. Free to send; 1% only when an invoice gets paid (free
+// after £2,000/yr). Card processing is Stripe's standard rate, at cost — shown
+// plainly so the tradie sees their exact net before sending.
 const INCLUDED: string[] = [
-  "Unlimited invoices, every currency",
-  "A pay link on every invoice",
-  "Card or bank — your client pays their way",
-  "Polite → firm → final follow-up, until paid",
-  "Money lands in your bank, not ours",
-  "1% only when an invoice gets paid",
-  "Capped at $2,000/yr — a big month won't punish you",
+  "Unlimited invoices",
+  "A pay link on every invoice, paid online in one tap",
+  "Reminders timed to your payment terms — patient when it should be, persistent when it has to be",
+  "Polite → firm → final, every message in your name, every message you'd be happy to sign",
+  "Money settles straight to your own account — Nudge never touches it",
+  "Your exact net shown before you send — no fee surprises, ever",
+  "1% only when an invoice gets paid · free after £2,000/yr",
   "Works on your phone, on the job",
 ];
 
@@ -26,10 +27,8 @@ export function PricingBlock() {
             letterSpacing: "-0.02em",
           }}
         >
-          Free to send.{" "}
-          <span style={{ color: "var(--color-paid-deep)" }}>
-            1% to get paid.
-          </span>
+          <span style={{ color: "var(--color-paid-deep)" }}>1%</span> when an
+          invoice gets paid
         </h2>
 
         <div
@@ -59,15 +58,20 @@ export function PricingBlock() {
                 1%
               </span>
               <span className="font-mono text-xs uppercase tracking-widest text-mute leading-tight">
-                on invoices
+                when an invoice
                 <br />
-                you get paid
+                gets paid
               </span>
             </div>
 
             <p className="text-sm text-mute mt-5 leading-relaxed">
-              No monthly fee, no per-seat, no lock-in. We take 1% only when an
-              invoice actually gets paid — capped at $2,000 a year.
+              No monthly fee. No per-seat. No subscription doing nothing in the
+              background.
+            </p>
+            <p className="text-sm text-mute mt-3 leading-relaxed">
+              Nudge takes 1% the moment money lands in your account — never
+              before. Once you&apos;ve paid £2,000 in a year, the rest of the
+              year is free.
             </p>
 
             <div
@@ -75,16 +79,36 @@ export function PricingBlock() {
               style={{ border: "1.5px solid var(--color-ink)" }}
             >
               <div className="font-mono text-[10px] uppercase tracking-widest text-mute mb-1.5">
-                The deal
+                What about card fees?
               </div>
-              <div className="text-sm font-semibold">
-                You only pay when it works.
+              <div className="text-[13px] text-mute leading-relaxed">
+                Stripe processes the payment and charges its standard rate
+                (~1.5% + 20p for UK cards) — that goes to Stripe, not us, with
+                zero markup. You see your exact net before you send anything. No
+                blended rates, no surprises in your dashboard.
               </div>
-              <div className="text-[13px] text-mute mt-1 leading-relaxed">
-                Nudge takes its 1% the moment the money lands in your account —
-                never before.
+              <div
+                className="mt-3 pt-3 text-[13px] leading-relaxed"
+                style={{ borderTop: "1.5px solid var(--color-rule)" }}
+              >
+                On a <span className="font-mono">£1,850</span> invoice: your
+                client pays <span className="font-mono">£1,850</span> · Stripe
+                takes <span className="font-mono">~£28</span> · Nudge takes{" "}
+                <span className="font-mono">£18.50</span> ·{" "}
+                <span
+                  className="font-mono font-semibold"
+                  style={{ color: "var(--color-paid-deep)" }}
+                >
+                  £1,803.50
+                </span>{" "}
+                lands in your bank — without you sending a single awkward text.
               </div>
             </div>
+
+            <p className="text-[13px] text-mute mt-4 leading-relaxed">
+              Compare that to £34/month software you have to drive yourself,
+              whether you get paid or not.
+            </p>
 
             <Link
               href="/signin"
@@ -98,7 +122,7 @@ export function PricingBlock() {
               Start free
             </Link>
             <div className="font-mono text-[10px] uppercase tracking-widest text-mute text-center mt-3">
-              No card to start · set up in minutes
+              No card to start · you see every fee before you send
             </div>
           </div>
 

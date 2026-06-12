@@ -5,19 +5,19 @@ const ITEMS = [
     n: "01",
     icon: Zap,
     title: "Send it from your phone",
-    body: "Client, job, amount — invoice out in three taps.",
+    body: "Client, job, amount, payment terms. Invoice out in three taps, pay link included.",
   },
   {
     n: "02",
     icon: Bell,
-    title: "Hand off the chasing",
-    body: "Nudge follows up — polite, then firm — as your invoicing assistant.",
+    title: "Nudge takes the watch",
+    body: "It knows when the invoice is due and what normal looks like. A friendly reminder before the due date, a polite follow-up after, firmer only if it's earned. Every message sounds like you on your most professional day — never desperate, never rude.",
   },
   {
     n: "03",
     icon: Banknote,
-    title: "1% to get paid",
-    body: "Card or bank. The money's yours; our cut comes off the top.",
+    title: "Money lands in your bank",
+    body: "Straight into your own account — Nudge never holds it. Standard card fees go to Stripe at cost; Nudge takes 1% only when the invoice is paid.",
   },
 ] as const;
 

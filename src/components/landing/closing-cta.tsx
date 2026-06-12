@@ -9,7 +9,8 @@ export function ClosingCTA() {
       >
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.2em] mb-4" style={{ color: "var(--color-hivis)" }}>
-            Free to send · 1% to get paid
+            Free to send · 1% when you&apos;re paid · You see every fee before
+            you send
           </div>
           <h2
             className="font-display leading-[1.0] tracking-tight"

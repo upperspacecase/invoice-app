@@ -72,7 +72,7 @@ function Hero() {
               style={{ background: "var(--color-paid)" }}
               aria-hidden
             />
-            Free to send · 1% to get paid
+            Free to send · 1% when you&apos;re paid
           </div>
           <h1
             className="font-display tracking-tight leading-[0.98]"
@@ -82,23 +82,12 @@ function Hero() {
               letterSpacing: "-0.025em",
             }}
           >
-            Send an invoice in 3 clicks.
+            Send the invoice. Forget about it.
           </h1>
-          <p
-            className="mt-4 font-display leading-[1.05]"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(1.35rem, 3vw, 2rem)",
-              color: "var(--color-paid-deep)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            We&apos;ll do the follow-up until you&apos;re paid.
-          </p>
           <p className="mt-6 text-base sm:text-lg text-mute max-w-md leading-relaxed">
-            Nudge is your invoicing assistant. Hand it the job — it sends the
-            invoice and chases the client, politely then firmly, until the
-            money lands.
+            Nudge is your invoicing assistant. It sends the invoice, knows when
+            it&apos;s due, reminds your client at the right moments — politely,
+            then firmly — until the money lands in your bank.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-5">
             <Link
@@ -120,7 +109,7 @@ function Hero() {
             </a>
           </div>
           <div className="mt-6 font-mono text-[11px] uppercase tracking-widest text-mute">
-            No card required · set up in minutes
+            No card required · no monthly fee · Nudge only earns when you do
           </div>
         </div>
 
@@ -138,7 +127,7 @@ function Footer() {
     >
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-widest text-mute">
         <Wordmark size="sm" />
-        <span>© {new Date().getFullYear()} — Free to send, 1% to get paid</span>
+        <span>© {new Date().getFullYear()} — Free to send · 1% when you&apos;re paid</span>
       </div>
     </footer>
   );

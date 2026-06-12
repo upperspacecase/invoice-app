@@ -67,8 +67,8 @@ export function OnboardingForm({ initial }: { initial: Business }) {
         Set your details once.
       </h1>
       <p className="text-sm text-mute mt-3 mb-8">
-        Two minutes now saves you typing on every invoice. You can change these
-        any time in Settings.
+        Two minutes, then I take it from here — your details on every invoice,
+        and I chase the late ones. Change these any time in Settings.
       </p>
 
       <form onSubmit={submit} className="space-y-5">

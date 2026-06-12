@@ -1,25 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus } from "lucide-react";
+import { Plus, Mail } from "lucide-react";
 import { requireOnboardedSession } from "@/lib/server/auth";
-import {
-  listAutomations,
-  listInvoices,
-  getWorkspace,
-} from "@/lib/server/store";
+import { getWorkspace } from "@/lib/server/store";
 import { getRates, convertSync } from "@/lib/fx";
 import { formatMoney } from "@/lib/currency";
-import { channelLabel, ChannelIcon } from "@/components/channel-icon";
+import { chaseLine, relativeTime, paidWithin } from "@/lib/followup-cadence";
 import type { CurrencyCode, Invoice } from "@/lib/types";
+
+const PAID_CELEBRATION_WINDOW = 72 * 60 * 60 * 1000;
 
 export default async function LedgerPage() {
   const { uid } = await requireOnboardedSession();
-  const [{ business, invoices }, automations, rates] = await Promise.all([
-    getWorkspace(uid),
-    listAutomations(uid),
-    getRates(),
-  ]);
-  void listInvoices; // tree-shaking guard
+  const [{ business, invoices, automations, activity }, rates] =
+    await Promise.all([getWorkspace(uid), getRates()]);
 
   const unpaid = invoices.filter((i) => i.status === "sent");
 
@@ -35,7 +29,12 @@ export default async function LedgerPage() {
   outstandingDefault = Math.round(outstandingDefault);
 
   const breakdown = bucketByCurrency(unpaid);
-  const agentActive = automations.find((a) => a.id === "auto-remind")?.enabled;
+  const agentActive =
+    automations.find((a) => a.id === "auto-remind")?.enabled ?? false;
+  const latestAgentEvent = activity.find((e) => e.who === "agent");
+  const justPaid = invoices.find((inv) =>
+    paidWithin(inv, PAID_CELEBRATION_WINDOW)
+  );
 
   return (
     <div className="pt-10 sm:pt-14">
@@ -71,6 +70,46 @@ export default async function LedgerPage() {
           ))}
         </div>
       </div>
+
+      {justPaid && (
+        <div className="flex items-center gap-4 border border-rule bg-card p-4 mb-8">
+          <Image
+            src="/brand/nudge-mascot.jpeg"
+            alt="Nudge"
+            width={56}
+            height={56}
+            className="border border-rule flex-shrink-0"
+          />
+          <div className="min-w-0">
+            <div className="font-display text-lg" style={{ fontWeight: 700 }}>
+              {justPaid.id} paid — good as gold.
+            </div>
+            <div
+              className="text-sm font-mono mt-0.5"
+              style={{ color: "var(--color-paid-deep)" }}
+            >
+              {formatMoney(justPaid.amount, justPaid.currency)} landed
+            </div>
+          </div>
+        </div>
+      )}
+
+      {latestAgentEvent && (
+        <Link
+          href="/app/activity"
+          className="block border border-rule bg-card p-4 mb-8 hover:border-ink/30 transition-colors"
+        >
+          <div className="text-[10px] uppercase tracking-widest text-mute font-mono mb-1">
+            Nudge&apos;s log
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="text-sm truncate">{latestAgentEvent.text}</span>
+            <span className="text-[11px] text-mute flex-shrink-0">
+              {relativeTime(latestAgentEvent.at)}
+            </span>
+          </div>
+        </Link>
+      )}
 
       <div className="flex justify-between items-center mb-4">
         <div className="text-xs uppercase tracking-widest text-mute">
@@ -113,47 +152,72 @@ export default async function LedgerPage() {
       )}
 
       <ul>
-        {invoices.map((inv) => (
-          <li
-            key={inv.id}
-            className="flex items-center justify-between py-4 border-b border-rule gap-3"
-          >
-            <ChannelIcon channel={inv.channel} />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">
-                {inv.clientName}
-              </div>
-              <div className="text-xs text-mute mt-0.5 truncate">
-                {inv.id} · {inv.date} · {channelLabel(inv.channel)}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-mono">
-                {formatMoney(inv.amount, inv.currency)}
-              </div>
-              <div
-                className="text-[10px] uppercase tracking-widest mt-0.5 flex items-center gap-2 justify-end"
-                style={{
-                  color:
-                    inv.status === "paid"
-                      ? "var(--color-paid)"
-                      : "var(--color-mute)",
-                }}
+        {invoices.map((inv) => {
+          const chase = chaseLine(inv, agentActive);
+          const chaseMuted =
+            inv.status === "paid" ||
+            !agentActive ||
+            chase === "Final notice sent";
+          return (
+            <li
+              key={inv.id}
+              className="flex items-center justify-between py-4 border-b border-rule gap-3"
+            >
+              <span
+                aria-label="Email"
+                className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-paper"
+                style={{ background: "#0a0a0a" }}
               >
-                {inv.status}
-                <a
-                  href={`/api/v1/invoices/${inv.id}/pdf`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[10px] uppercase tracking-widest text-mute hover:text-ink"
-                  aria-label={`View ${inv.id} PDF`}
-                >
-                  PDF
-                </a>
+                <Mail size={13} strokeWidth={1.8} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">
+                  {inv.clientName}
+                </div>
+                <div className="text-xs text-mute mt-0.5 truncate">
+                  {inv.id} · {inv.date}
+                </div>
+                {chase && (
+                  <div
+                    className="text-xs mt-0.5 truncate"
+                    style={{
+                      color: chaseMuted
+                        ? "var(--color-mute)"
+                        : "var(--color-paid-deep)",
+                    }}
+                  >
+                    {chase}
+                  </div>
+                )}
               </div>
-            </div>
-          </li>
-        ))}
+              <div className="text-right">
+                <div className="text-sm font-mono">
+                  {formatMoney(inv.amount, inv.currency)}
+                </div>
+                <div
+                  className="text-[10px] uppercase tracking-widest mt-0.5 flex items-center gap-2 justify-end"
+                  style={{
+                    color:
+                      inv.status === "paid"
+                        ? "var(--color-paid)"
+                        : "var(--color-mute)",
+                  }}
+                >
+                  {inv.status}
+                  <a
+                    href={`/api/v1/invoices/${inv.id}/pdf`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] uppercase tracking-widest text-mute hover:text-ink"
+                    aria-label={`View ${inv.id} PDF`}
+                  >
+                    PDF
+                  </a>
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="mt-10">

@@ -12,16 +12,8 @@ import {
   Send,
 } from "lucide-react";
 import { CURRENCIES, formatMoney, symbolFor } from "@/lib/currency";
-import { channelLabel } from "@/components/channel-icon";
-import { FeatureBadge, featureStatus } from "@/components/feature-lock";
-import type {
-  Business,
-  Client,
-  CurrencyCode,
-  DeliveryChannel,
-  IntegrationId,
-} from "@/lib/types";
-import type { FeatureId } from "@/lib/features";
+import { chasePlanDates, formatChaseDate } from "@/lib/followup-cadence";
+import type { Business, Client, CurrencyCode } from "@/lib/types";
 import { createInvoiceAction } from "@/app/_actions";
 
 type Draft = {
@@ -29,7 +21,6 @@ type Draft = {
   amount: string;
   description: string;
   currency: CurrencyCode;
-  channelOverride: DeliveryChannel | null;
 };
 
 type Step = 0 | 1 | 2 | 3;
@@ -37,17 +28,12 @@ type Step = 0 | 1 | 2 | 3;
 export function NewInvoiceWizard({
   business,
   clients,
-  connectedIntegrations,
-  featureVotes,
+  agentActive,
 }: {
   business: Business;
   clients: Client[];
-  connectedIntegrations: IntegrationId[];
-  featureVotes: FeatureId[];
+  agentActive: boolean;
 }) {
-  const currencyUnlocked =
-    featureStatus("multi-currency", business.tier) === "allowed";
-  const currencyVoted = featureVotes.includes("multi-currency");
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [draft, setDraft] = useState<Draft>({
@@ -55,12 +41,12 @@ export function NewInvoiceWizard({
     amount: "",
     description: "",
     currency: business.currency,
-    channelOverride: null,
   });
   const [showCurrency, setShowCurrency] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [sentInvoiceId, setSentInvoiceId] = useState<string | null>(null);
+  const [sentAt, setSentAt] = useState<number | null>(null);
 
   function handleBack() {
     if (step === 0 || step === 3) {
@@ -76,7 +62,6 @@ export function NewInvoiceWizard({
       client,
       amount: d.amount || (client.lastAmount ? client.lastAmount.toString() : ""),
       currency: client.currency || d.currency,
-      channelOverride: null,
     }));
     setStep(1);
   }
@@ -93,9 +78,9 @@ export function NewInvoiceWizard({
           amount,
           description: draft.description || "Services rendered",
           currency: draft.currency,
-          channelOverride: draft.channelOverride ?? undefined,
         });
         setSentInvoiceId(inv.id);
+        setSentAt(Date.now());
         setStep(3);
         router.refresh();
       } catch (e) {
@@ -103,10 +88,6 @@ export function NewInvoiceWizard({
       }
     });
   }
-
-  const effectiveChannel: DeliveryChannel | null = draft.client
-    ? draft.channelOverride ?? draft.client.delivery
-    : null;
 
   return (
     <div className="pt-8 relative">
@@ -141,10 +122,7 @@ export function NewInvoiceWizard({
         <StepAmount
           draft={draft}
           setDraft={setDraft}
-          currencyUnlocked={currencyUnlocked}
-          currencyVoted={currencyVoted}
-          userTier={business.tier}
-          onPickCurrency={() => currencyUnlocked && setShowCurrency(true)}
+          onPickCurrency={() => setShowCurrency(true)}
           onNext={() => setStep(2)}
         />
       )}
@@ -153,8 +131,6 @@ export function NewInvoiceWizard({
         <StepPreview
           draft={draft}
           business={business}
-          channel={effectiveChannel ?? "email"}
-          connectedIntegrations={connectedIntegrations}
           pending={pending}
           error={error}
           onSend={handleSend}
@@ -166,8 +142,8 @@ export function NewInvoiceWizard({
           amount={parseFloat(draft.amount || "0")}
           currency={draft.currency}
           clientName={draft.client.name}
-          channel={effectiveChannel ?? "email"}
-          deliveryHandle={draft.client.deliveryHandle}
+          agentActive={agentActive}
+          sentAt={sentAt ?? 0}
           invoiceId={sentInvoiceId}
           onDone={() => router.push("/app")}
         />
@@ -229,17 +205,11 @@ function StepPickClient({
 function StepAmount({
   draft,
   setDraft,
-  currencyUnlocked,
-  currencyVoted,
-  userTier,
   onPickCurrency,
   onNext,
 }: {
   draft: Draft;
   setDraft: React.Dispatch<React.SetStateAction<Draft>>;
-  currencyUnlocked: boolean;
-  currencyVoted: boolean;
-  userTier: Business["tier"];
   onPickCurrency: () => void;
   onNext: () => void;
 }) {
@@ -286,26 +256,13 @@ function StepAmount({
         <button
           type="button"
           onClick={onPickCurrency}
-          disabled={!currencyUnlocked}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-rule text-sm transition-colors disabled:cursor-not-allowed"
-          style={{
-            borderColor: "var(--color-rule)",
-            opacity: currencyUnlocked ? 1 : 0.6,
-          }}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-rule text-sm transition-colors"
+          style={{ borderColor: "var(--color-rule)" }}
         >
           <Globe size={14} />
           <span className="font-mono">{draft.currency}</span>
-          {currencyUnlocked && (
-            <span className="text-xs text-mute">· change</span>
-          )}
+          <span className="text-xs text-mute">· change</span>
         </button>
-        {!currencyUnlocked && (
-          <FeatureBadge
-            feature="multi-currency"
-            userTier={userTier}
-            voted={currencyVoted}
-          />
-        )}
       </div>
 
       <div className="text-xs uppercase tracking-widest text-mute mb-2">
@@ -337,22 +294,17 @@ function StepAmount({
 function StepPreview({
   draft,
   business,
-  channel,
-  connectedIntegrations,
   pending,
   error,
   onSend,
 }: {
   draft: Draft;
   business: Business;
-  channel: DeliveryChannel;
-  connectedIntegrations: IntegrationId[];
   pending: boolean;
   error: string | null;
   onSend: () => void;
 }) {
   const amount = parseFloat(draft.amount || "0");
-  const callout = channelCallout(channel, draft.client!, connectedIntegrations);
 
   return (
     <div>
@@ -365,19 +317,16 @@ function StepPreview({
 
       <div
         className="mt-3 mb-6 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-        style={{
-          background: callout.bg,
-          color: callout.fg,
-        }}
+        style={{ background: "rgba(10,10,10,0.05)", color: "var(--color-ink)" }}
       >
         <span
           aria-hidden
           className="w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold"
-          style={{ background: callout.swatch, color: "#fff" }}
+          style={{ background: "#0a0a0a", color: "#fff" }}
         >
-          {callout.initial}
+          @
         </span>
-        {callout.text}
+        Will email this to {draft.client?.email}
       </div>
 
       <div className="bg-card border border-rule rounded-2xl p-6">
@@ -435,76 +384,10 @@ function StepPreview({
         className="mt-8 w-full h-14 bg-ink text-paper flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50"
       >
         <Send size={14} />
-        {pending ? "Sending…" : `Send via ${channelLabel(channel)}`}
+        {pending ? "Sending…" : "Send invoice"}
       </button>
     </div>
   );
-}
-
-type Callout = {
-  text: string;
-  bg: string;
-  fg: string;
-  swatch: string;
-  initial: string;
-};
-
-function channelCallout(
-  channel: DeliveryChannel,
-  client: Client,
-  connected: IntegrationId[]
-): Callout {
-  const handle = client.deliveryHandle ?? client.email;
-  const requiresOAuth: Record<DeliveryChannel, IntegrationId | null> = {
-    email: null,
-    portal: null,
-    quickbooks: "quickbooks",
-    xero: "xero",
-    slack: "slack",
-    webhook: "webhook",
-  };
-  const needs = requiresOAuth[channel];
-  const ok = !needs || connected.includes(needs);
-  if (!ok) {
-    return {
-      text: `${channelLabel(channel)} not connected — will fall back to email`,
-      bg: "rgba(196, 78, 44, 0.08)",
-      fg: "#a73e22",
-      swatch: "#c44e2c",
-      initial: "!",
-    };
-  }
-  if (channel === "email") {
-    return {
-      text: `Will email this to ${client.email}`,
-      bg: "rgba(10,10,10,0.05)",
-      fg: "var(--color-ink)",
-      swatch: "#0a0a0a",
-      initial: "@",
-    };
-  }
-  return {
-    text: `Will deliver via ${channelLabel(channel)} → ${handle}`,
-    bg: "rgba(44,160,28,0.08)",
-    fg: "#1e6f12",
-    swatch: channelSwatch(channel),
-    initial: channelLabel(channel)[0],
-  };
-}
-
-function channelSwatch(c: DeliveryChannel): string {
-  switch (c) {
-    case "quickbooks":
-      return "#2CA01C";
-    case "xero":
-      return "#13B5EA";
-    case "slack":
-      return "#4A154B";
-    case "portal":
-      return "#c44e2c";
-    default:
-      return "#0a0a0a";
-  }
 }
 
 function Block({
@@ -528,23 +411,25 @@ function StepSent({
   amount,
   currency,
   clientName,
-  channel,
-  deliveryHandle,
+  agentActive,
+  sentAt,
   invoiceId,
   onDone,
 }: {
   amount: number;
   currency: CurrencyCode;
   clientName: string;
-  channel: DeliveryChannel;
-  deliveryHandle?: string;
+  agentActive: boolean;
+  sentAt: number;
   invoiceId: string | null;
   onDone: () => void;
 }) {
-  const message =
-    channel === "email"
-      ? `${formatMoney(amount, currency)} requested from ${clientName}`
-      : `Pushed to ${clientName}'s ${channelLabel(channel)}${deliveryHandle ? ` → ${deliveryHandle}` : ""}`;
+  const plan = chasePlanDates(sentAt);
+  const planRows: { label: string; at: number }[] = [
+    { label: "Polite nudge", at: plan[0] },
+    { label: "Firm follow-up", at: plan[1] },
+    { label: "Final notice", at: plan[2] },
+  ];
   return (
     <div className="flex flex-col items-center justify-center pt-12 pb-20 text-center">
       <Image
@@ -558,9 +443,36 @@ function StepSent({
         className="font-display text-4xl sm:text-5xl leading-tight"
         style={{ fontWeight: 800 }}
       >
-        Sent it. I&apos;ll chase &apos;em.
+        {agentActive ? "Sent it. I'll chase 'em." : "Sent it."}
       </h1>
-      <p className="text-sm text-mute mt-3 mb-10 max-w-xs">{message}</p>
+      <p className="text-sm text-mute mt-3 mb-8 max-w-xs">
+        {formatMoney(amount, currency)} requested from {clientName}
+      </p>
+
+      {agentActive && (
+        <div className="w-full max-w-xs text-left border border-rule bg-card mb-10">
+          <div className="px-4 py-2.5 border-b border-rule text-[10px] uppercase tracking-widest text-mute font-mono">
+            The plan — if it goes quiet
+          </div>
+          {planRows.map((row, i) => (
+            <div
+              key={row.label}
+              className={`px-4 py-2.5 flex items-center justify-between text-sm ${
+                i < planRows.length - 1 ? "border-b border-rule" : ""
+              }`}
+            >
+              <span>{row.label}</span>
+              <span className="font-mono text-xs text-mute">
+                {formatChaseDate(row.at)}
+              </span>
+            </div>
+          ))}
+          <div className="px-4 py-2.5 border-t border-rule text-xs text-mute">
+            I stop the moment it&apos;s paid.
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         {invoiceId && (
           <a

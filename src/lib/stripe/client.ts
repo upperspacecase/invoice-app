@@ -15,21 +15,6 @@ export function stripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 
-export type StripePriceMap = {
-  pro: string | null;
-  getPaid: string | null;
-};
-
-export function priceIds(): StripePriceMap {
-  return {
-    pro: process.env.STRIPE_PRICE_PRO ?? null,
-    getPaid: process.env.STRIPE_PRICE_GET_PAID ?? null,
-  };
-}
-
 export function appBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "https://invoice-app-xi-eight.vercel.app"
-  );
+  return process.env.NEXT_PUBLIC_APP_URL || "https://nudgeinvoicing.pro";
 }

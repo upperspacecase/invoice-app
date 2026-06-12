@@ -4,17 +4,13 @@ import { AutomationsList } from "@/components/automations-list";
 
 export default async function SettingsAutomationsPage() {
   const { uid } = await requireOnboardedSession();
-  const { business, automations, featureVotes } = await getWorkspace(uid);
+  const { automations } = await getWorkspace(uid);
   return (
     <div>
       <p className="text-sm text-mute mb-6">
-        Things that run on their own. Toggle off any time.
+        Things Nudge runs on its own. Toggle off any time.
       </p>
-      <AutomationsList
-        automations={automations}
-        userTier={business.tier}
-        votes={featureVotes}
-      />
+      <AutomationsList automations={automations} />
     </div>
   );
 }

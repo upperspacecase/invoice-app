@@ -6,24 +6,17 @@ import type {
   ActivityActor,
   ActivityEvent,
   ApiKey,
+  Automation,
   AutomationId,
   Business,
   Client,
   CurrencyCode,
-  DeliveryChannel,
-  IntegrationId,
   Invoice,
-  Tier,
 } from "../types";
-import type { FeatureId } from "../features";
 import {
   formatLabel,
-  initialActivity,
   initialAutomations,
   initialBusiness,
-  initialClients,
-  initialIntegrations,
-  initialInvoices,
 } from "../demo-data";
 import { convert } from "../fx";
 import { currencyMeta } from "../currency";
@@ -40,10 +33,6 @@ function clientsCol(uid: string) {
 
 function invoicesCol(uid: string) {
   return userDoc(uid).collection("invoices");
-}
-
-function integrationsCol(uid: string) {
-  return userDoc(uid).collection("integrations");
 }
 
 function automationsCol(uid: string) {
@@ -80,33 +69,10 @@ export async function ensureUserSeeded(
   const batch = adminDb().batch();
   batch.set(profileRef, { ...business, createdAt: FieldValue.serverTimestamp() });
 
-  for (const c of initialClients) {
-    batch.set(clientsCol(uid).doc(c.id), {
-      ...c,
-      createdAt: FieldValue.serverTimestamp(),
-    });
-  }
-  for (const inv of initialInvoices) {
-    batch.set(invoicesCol(uid).doc(inv.id), {
-      ...inv,
-      sentAt: Timestamp.fromMillis(inv.sentAt),
-      paidAt: inv.paidAt ? Timestamp.fromMillis(inv.paidAt) : null,
-    });
-  }
-  for (const it of initialIntegrations) {
-    batch.set(integrationsCol(uid).doc(it.id), {
-      ...it,
-      connectedAt: it.connectedAt ? Timestamp.fromMillis(it.connectedAt) : null,
-    });
-  }
+  // New accounts start empty — no demo clients/invoices — and land on the
+  // mascot empty state. Only the agent's one real automation is seeded.
   for (const au of initialAutomations) {
     batch.set(automationsCol(uid).doc(au.id), { ...au });
-  }
-  for (const ev of initialActivity) {
-    batch.set(activityCol(uid).doc(ev.id), {
-      ...ev,
-      at: Timestamp.fromMillis(ev.at),
-    });
   }
   await batch.commit();
 }
@@ -150,9 +116,6 @@ export async function getBusiness(uid: string): Promise<Business> {
     payment: data.payment ?? initialBusiness.payment,
     company: data.company ?? initialBusiness.company,
     currency: data.currency ?? initialBusiness.currency,
-    // Free + 1% model: everything's free, so everyone gets full feature
-    // access. The only paid thing is the 1% on a paid invoice (Stripe).
-    tier: data.tier ?? "get-paid",
     brandColor:
       typeof data.brandColor === "string" ? data.brandColor : undefined,
     logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : undefined,
@@ -162,30 +125,7 @@ export async function getBusiness(uid: string): Promise<Business> {
     onboarded: data.onboarded ?? false,
     stripeAccountId:
       typeof data.stripeAccountId === "string" ? data.stripeAccountId : undefined,
-    stripeCustomerId:
-      typeof data.stripeCustomerId === "string" ? data.stripeCustomerId : undefined,
-    stripeSubscriptionId:
-      typeof data.stripeSubscriptionId === "string"
-        ? data.stripeSubscriptionId
-        : undefined,
   };
-}
-
-export async function setTier(uid: string, tier: Tier): Promise<Business> {
-  const current = await getBusiness(uid);
-  if (current.tier === tier) return current;
-  await userDoc(uid).collection("meta").doc(PROFILE_DOC).set({ tier }, { merge: true });
-  await pushActivity(
-    uid,
-    "you",
-    tier === "send"
-      ? "Switched to Send (free)"
-      : tier === "pro"
-      ? "Upgraded to Pro"
-      : "Upgraded to Get Paid",
-    "billing.demo"
-  );
-  return { ...current, tier };
 }
 
 export async function updateBusiness(
@@ -228,11 +168,6 @@ function normaliseClient(id: string, data: Record<string, unknown>): Client {
     email: String(data.email ?? ""),
     lastAmount: typeof data.lastAmount === "number" ? data.lastAmount : 0,
     currency: (data.currency as CurrencyCode) ?? "USD",
-    delivery: (data.delivery as DeliveryChannel) ?? "email",
-    deliveryHandle:
-      typeof data.deliveryHandle === "string"
-        ? data.deliveryHandle
-        : undefined,
   };
 }
 
@@ -259,8 +194,6 @@ type CreateClientInput = {
   name: string;
   email: string;
   currency?: CurrencyCode;
-  delivery?: DeliveryChannel;
-  deliveryHandle?: string;
 };
 
 export async function createClient(
@@ -275,8 +208,6 @@ export async function createClient(
     email: input.email,
     lastAmount: 0,
     currency: input.currency ?? business.currency,
-    delivery: input.delivery ?? "email",
-    deliveryHandle: input.deliveryHandle,
   };
   await clientsCol(uid).doc(id).set({
     ...client,
@@ -294,9 +225,7 @@ export async function updateClient(
   const ref = clientsCol(uid).doc(id);
   const snap = await ref.get();
   if (!snap.exists) return null;
-  const cleaned: Record<string, unknown> = { ...patch };
-  if (patch.deliveryHandle === undefined) delete cleaned.deliveryHandle;
-  await ref.set(cleaned, { merge: true });
+  await ref.set({ ...patch }, { merge: true });
   return getClient(uid, id);
 }
 
@@ -313,7 +242,6 @@ function normaliseInvoice(id: string, data: Record<string, unknown>): Invoice {
     description: String(data.description ?? ""),
     date: String(data.date ?? ""),
     status: data.status === "paid" ? "paid" : "sent",
-    channel: (data.channel as DeliveryChannel) ?? "email",
     sentAt: fromTimestamp(data.sentAt),
     paidAt: data.paidAt ? fromTimestamp(data.paidAt) : undefined,
     lastReminderAt: data.lastReminderAt
@@ -379,7 +307,6 @@ type CreateInvoiceInput = {
   amount: number;
   description: string;
   currency?: CurrencyCode;
-  channelOverride?: DeliveryChannel;
   actor?: ActivityActor;
 };
 
@@ -389,7 +316,6 @@ export async function createInvoice(
 ): Promise<Invoice | null> {
   const client = await getClient(uid, input.clientId);
   if (!client) return null;
-  const channel = input.channelOverride ?? client.delivery;
   const currency = input.currency ?? client.currency;
   const id = await nextInvoiceId(uid);
   const now = Date.now();
@@ -403,7 +329,6 @@ export async function createInvoice(
     description: input.description,
     date: formatLabel(now),
     status: "sent",
-    channel,
     sentAt: now,
   };
   const batch = adminDb().batch();
@@ -419,17 +344,11 @@ export async function createInvoice(
   );
   await batch.commit();
 
-  const channelLabel =
-    channel === "email"
-      ? `email to ${client.email}`
-      : channel === "portal"
-      ? "portal link"
-      : channel.charAt(0).toUpperCase() + channel.slice(1);
   await pushActivity(
     uid,
     input.actor ?? "you",
     `Sent ${id} to ${client.name}`,
-    `via ${channelLabel}`
+    `via email to ${client.email}`
   );
   return invoice;
 }
@@ -450,7 +369,12 @@ export async function markInvoicePaid(
     { merge: true }
   );
   await recordPlatformFeeForPaidInvoice(uid, inv);
-  await pushActivity(uid, actor, `Marked ${id} paid`, "manual");
+  await pushActivity(
+    uid,
+    actor,
+    actor === "system" ? `${id} paid — payment landed via Stripe` : `Marked ${id} paid`,
+    actor === "system" ? "stripe payment" : "manual"
+  );
   return { ...inv, status: "paid", paidAt: now };
 }
 
@@ -528,71 +452,40 @@ async function recordPlatformFeeForPaidInvoice(
     .set({ platformFeeRecorded: true }, { merge: true });
 }
 
-// ---------- integrations ----------
-
-function normaliseIntegration(id: string, data: Record<string, unknown>) {
-  return {
-    id: id as IntegrationId,
-    name: String(data.name ?? ""),
-    description: String(data.description ?? ""),
-    color: String(data.color ?? "#0a0a0a"),
-    connected: Boolean(data.connected),
-    account:
-      typeof data.account === "string" && data.account ? data.account : undefined,
-    connectedAt: data.connectedAt ? fromTimestamp(data.connectedAt) : undefined,
-  };
-}
-
-export async function listIntegrations(uid: string) {
-  const snap = await integrationsCol(uid).get();
-  return snap.docs.map((d) => normaliseIntegration(d.id, d.data()));
-}
-
-export async function setIntegrationConnected(
-  uid: string,
-  id: IntegrationId,
-  connected: boolean,
-  account?: string
-) {
-  const ref = integrationsCol(uid).doc(id);
-  const snap = await ref.get();
-  if (!snap.exists) return null;
-  const existing = normaliseIntegration(snap.id, snap.data() ?? {});
-  const update: Record<string, unknown> = { connected };
-  if (connected) {
-    update.account = account ?? `${existing.name.toLowerCase()}-account`;
-    update.connectedAt = FieldValue.serverTimestamp();
-  } else {
-    update.account = FieldValue.delete();
-    update.connectedAt = FieldValue.delete();
-  }
-  await ref.set(update, { merge: true });
-  await pushActivity(
-    uid,
-    "you",
-    `${connected ? "Connected" : "Disconnected"} ${existing.name}`,
-    connected
-      ? "OAuth flow stubbed for demo · scope: invoice.write"
-      : "Disconnected"
-  );
-  const next = await ref.get();
-  return normaliseIntegration(next.id, next.data() ?? {});
-}
-
 // ---------- automations ----------
 
-function normaliseAutomation(id: string, data: Record<string, unknown>) {
+// The only automation ids the product knows about. Stale ids written by older
+// code versions are ignored so they can never reach the UI (which would crash
+// on an unknown id).
+const KNOWN_AUTOMATION_IDS = new Set<AutomationId>(
+  initialAutomations.map((a) => a.id)
+);
+
+function isAutomationId(id: string): id is AutomationId {
+  return KNOWN_AUTOMATION_IDS.has(id as AutomationId);
+}
+
+function normaliseAutomation(id: AutomationId, data: Record<string, unknown>): Automation {
+  const fallback = initialAutomations.find((a) => a.id === id);
   return {
-    id: id as AutomationId,
-    title: String(data.title ?? ""),
-    body: String(data.body ?? ""),
+    id,
+    title: String(data.title ?? fallback?.title ?? ""),
+    body: String(data.body ?? fallback?.body ?? ""),
     enabled: Boolean(data.enabled),
   };
 }
 
-export async function listAutomations(uid: string) {
+export async function listAutomations(uid: string): Promise<Automation[]> {
   const snap = await automationsCol(uid).get();
-  return snap.docs.map((d) => normaliseAutomation(d.id, d.data()));
+  const stored = new Map<AutomationId, Record<string, unknown>>();
+  for (const d of snap.docs) {
+    if (isAutomationId(d.id)) stored.set(d.id, d.data());
+  }
+  // Merge with defaults so long-lived accounts missing a known automation row
+  // still render (and can toggle) every automation the product ships.
+  return initialAutomations.map((def) =>
+    normaliseAutomation(def.id, stored.get(def.id) ?? { ...def })
+  );
 }
 
 export async function setAutomationEnabled(
@@ -600,11 +493,15 @@ export async function setAutomationEnabled(
   id: AutomationId,
   enabled: boolean
 ) {
+  if (!isAutomationId(id)) return null;
   const ref = automationsCol(uid).doc(id);
   const snap = await ref.get();
-  if (!snap.exists) return null;
-  await ref.set({ enabled }, { merge: true });
-  const after = normaliseAutomation(id, { ...(snap.data() ?? {}), enabled });
+  // Backfill the row from defaults if a long-lived account never had it.
+  const base = snap.exists
+    ? (snap.data() ?? {})
+    : { ...(initialAutomations.find((a) => a.id === id) ?? {}) };
+  await ref.set({ ...base, enabled }, { merge: true });
+  const after = normaliseAutomation(id, { ...base, enabled });
   await pushActivity(
     uid,
     "you",
@@ -705,34 +602,6 @@ export async function touchApiKey(id: string): Promise<void> {
   );
 }
 
-// ---------- feature votes ----------
-
-function votesCol(uid: string) {
-  return userDoc(uid).collection("featureVotes");
-}
-
-export async function voteForFeature(
-  uid: string,
-  id: FeatureId
-): Promise<{ alreadyVoted: boolean }> {
-  const ref = votesCol(uid).doc(id);
-  const snap = await ref.get();
-  if (snap.exists) return { alreadyVoted: true };
-  await ref.set({ at: FieldValue.serverTimestamp() });
-  await pushActivity(
-    uid,
-    "you",
-    `Voted to prioritise "${id}"`,
-    "features.vote"
-  );
-  return { alreadyVoted: false };
-}
-
-export async function listFeatureVotes(uid: string): Promise<FeatureId[]> {
-  const snap = await votesCol(uid).get();
-  return snap.docs.map((d) => d.id as FeatureId);
-}
-
 // ---------- activity ----------
 
 export async function listActivity(
@@ -769,33 +638,21 @@ export async function getAutomation(
 }
 
 export async function getWorkspace(uid: string) {
-  const [
-    business,
-    clients,
-    invoices,
-    integrations,
-    automations,
-    apiKeys,
-    activity,
-    featureVotes,
-  ] = await Promise.all([
-    getBusiness(uid),
-    listClients(uid),
-    listInvoices(uid),
-    listIntegrations(uid),
-    listAutomations(uid),
-    listApiKeys(uid),
-    listActivity(uid),
-    listFeatureVotes(uid),
-  ]);
+  const [business, clients, invoices, automations, apiKeys, activity] =
+    await Promise.all([
+      getBusiness(uid),
+      listClients(uid),
+      listInvoices(uid),
+      listAutomations(uid),
+      listApiKeys(uid),
+      listActivity(uid),
+    ]);
   return {
     business,
     clients,
     invoices,
-    integrations,
     automations,
     apiKeys,
     activity,
-    featureVotes,
   };
 }

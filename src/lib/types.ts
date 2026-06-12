@@ -6,35 +6,16 @@ export type CurrencyCode =
   | "CAD"
   | "JPY";
 
-export type DeliveryChannel =
-  | "email"
-  | "quickbooks"
-  | "xero"
-  | "slack"
-  | "webhook"
-  | "portal";
-
-export type Tier = "send" | "pro" | "get-paid";
-
-export const TIER_RANK: Record<Tier, number> = {
-  send: 0,
-  pro: 1,
-  "get-paid": 2,
-};
-
 export type Business = {
   name: string;
   email: string;
   payment: string;
   company: string;
   currency: CurrencyCode;
-  tier: Tier;
   brandColor?: string;
   logoUrl?: string;
   onboarded: boolean;
   stripeAccountId?: string;
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
 };
 
 export type Client = {
@@ -43,8 +24,6 @@ export type Client = {
   email: string;
   lastAmount: number;
   currency: CurrencyCode;
-  delivery: DeliveryChannel;
-  deliveryHandle?: string;
 };
 
 export type InvoiceStatus = "sent" | "paid";
@@ -59,7 +38,6 @@ export type Invoice = {
   description: string;
   date: string;
   status: InvoiceStatus;
-  channel: DeliveryChannel;
   sentAt: number;
   paidAt?: number;
   lastReminderAt?: number;
@@ -75,23 +53,6 @@ export type Invoice = {
 
 // Follow-up cadence stages: 1 polite, 2 firm, 3 final.
 export type FollowupStage = 1 | 2 | 3;
-
-export type IntegrationId =
-  | "quickbooks"
-  | "xero"
-  | "slack"
-  | "stripe"
-  | "webhook";
-
-export type Integration = {
-  id: IntegrationId;
-  name: string;
-  description: string;
-  color: string;
-  connected: boolean;
-  account?: string;
-  connectedAt?: number;
-};
 
 export type ApiKey = {
   id: string;
@@ -129,7 +90,6 @@ export type AppState = {
   business: Business;
   clients: Client[];
   invoices: Invoice[];
-  integrations: Integration[];
   apiKeys: ApiKey[];
   automations: Automation[];
   activity: ActivityEvent[];

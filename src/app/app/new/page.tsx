@@ -4,16 +4,14 @@ import { NewInvoiceWizard } from "@/components/new-invoice-wizard";
 
 export default async function NewInvoicePage() {
   const { uid } = await requireOnboardedSession();
-  const { business, clients, integrations, featureVotes } = await getWorkspace(
-    uid
-  );
-  const connected = integrations.filter((i) => i.connected).map((i) => i.id);
+  const { business, clients, automations } = await getWorkspace(uid);
+  const agentActive =
+    automations.find((a) => a.id === "auto-remind")?.enabled ?? false;
   return (
     <NewInvoiceWizard
       business={business}
       clients={clients}
-      connectedIntegrations={connected}
-      featureVotes={featureVotes}
+      agentActive={agentActive}
     />
   );
 }

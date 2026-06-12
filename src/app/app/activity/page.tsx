@@ -2,18 +2,25 @@ import Link from "next/link";
 import { ArrowLeft, Bell, Bot, User } from "lucide-react";
 import { requireOnboardedSession } from "@/lib/server/auth";
 import { listActivity } from "@/lib/server/store";
+import { relativeTime } from "@/lib/followup-cadence";
 import type { ActivityActor } from "@/lib/types";
 
 const TONE: Record<ActivityActor, string> = {
-  agent: "var(--color-accent)",
+  agent: "var(--color-paid-deep)",
   you: "var(--color-ink)",
   system: "var(--color-mute)",
 };
 
 const BG: Record<ActivityActor, string> = {
-  agent: "rgba(196,78,44,0.1)",
-  you: "rgba(10,10,10,0.05)",
-  system: "rgba(10,10,10,0.05)",
+  agent: "rgba(46,184,106,0.12)",
+  you: "rgba(28,31,26,0.05)",
+  system: "rgba(28,31,26,0.05)",
+};
+
+const ACTOR_LABEL: Record<ActivityActor, string> = {
+  agent: "Nudge",
+  you: "You",
+  system: "System",
 };
 
 export default async function ActivityPage() {
@@ -38,7 +45,7 @@ export default async function ActivityPage() {
         </h1>
       </div>
       <p className="text-sm text-mute mb-6">
-        Everything you and your agents have done.
+        Everything Nudge has done for you — and everything you&apos;ve done.
       </p>
 
       <ul>
@@ -62,10 +69,10 @@ export default async function ActivityPage() {
                     className="text-[11px] uppercase tracking-widest font-medium"
                     style={{ color: TONE[e.who] }}
                   >
-                    {e.who}
+                    {ACTOR_LABEL[e.who]}
                   </span>
                   <span className="text-[11px] text-mute">
-                    {relative(e.at)}
+                    {relativeTime(e.at)}
                   </span>
                 </div>
                 <div className="text-sm mt-1">{e.text}</div>
@@ -81,18 +88,4 @@ export default async function ActivityPage() {
       </ul>
     </div>
   );
-}
-
-function relative(at: number): string {
-  const diff = Date.now() - at;
-  const m = Math.floor(diff / 60_000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m} min ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d} day${d === 1 ? "" : "s"} ago`;
-  const w = Math.floor(d / 7);
-  if (w < 5) return `${w} week${w === 1 ? "" : "s"} ago`;
-  return new Date(at).toLocaleDateString();
 }

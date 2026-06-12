@@ -6,11 +6,11 @@ export async function GET() {
     endpoints: {
       "GET /api/v1/clients": "List saved clients.",
       "POST /api/v1/clients":
-        "Create a client. Body: { name, email, currency?, delivery?, deliveryHandle? }.",
+        "Create a client. Body: { name, email, currency? }.",
       "GET /api/v1/invoices":
         "List invoices. Query: status=sent|paid, clientId, limit.",
       "POST /api/v1/invoices":
-        "Create + send an invoice. Body: { clientId, amount, description?, currency?, channelOverride? }.",
+        "Create + send an invoice. Body: { clientId, amount, description?, currency? }.",
       "POST /api/v1/invoices/{id}/remind":
         "Send a reminder for an unpaid invoice.",
       "POST /api/v1/invoices/{id}/paid":

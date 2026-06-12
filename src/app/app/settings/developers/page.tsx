@@ -1,16 +1,11 @@
-import Link from "next/link";
 import { FileText, Bot } from "lucide-react";
 import { requireOnboardedSession } from "@/lib/server/auth";
 import { getWorkspace } from "@/lib/server/store";
 import { ApiKeysPanel } from "@/components/api-keys-panel";
-import { TIER_LABEL, FEATURES } from "@/lib/features";
-import { TIER_RANK } from "@/lib/types";
 
 export default async function SettingsDevelopersPage() {
   const { uid } = await requireOnboardedSession();
-  const { business, apiKeys } = await getWorkspace(uid);
-  const meta = FEATURES["agent-api"];
-  const inPlan = TIER_RANK[business.tier] >= TIER_RANK[meta.tier];
+  const { apiKeys } = await getWorkspace(uid);
 
   return (
     <div>
@@ -19,32 +14,7 @@ export default async function SettingsDevelopersPage() {
         and follow up — same as the app.
       </p>
 
-      {!inPlan && (
-        <div
-          className="rounded-xl border p-4 mb-6 flex items-center justify-between gap-3"
-          style={{
-            background: "rgba(196,78,44,0.06)",
-            borderColor: "rgba(196,78,44,0.25)",
-          }}
-        >
-          <div className="text-xs">
-            <div className="font-medium text-ink">
-              Agent API is part of {TIER_LABEL[meta.tier]}
-            </div>
-            <div className="text-mute mt-0.5">
-              Generate keys and let an agent send invoices through your account.
-            </div>
-          </div>
-          <Link
-            href="/app/settings/billing"
-            className="text-xs px-3 py-2 rounded-md bg-ink text-paper font-medium whitespace-nowrap"
-          >
-            Upgrade to {TIER_LABEL[meta.tier]}
-          </Link>
-        </div>
-      )}
-
-      <ApiKeysPanel keys={apiKeys} locked={!inPlan} />
+      <ApiKeysPanel keys={apiKeys} />
 
       <div className="text-xs uppercase tracking-widest text-mute mt-10 mb-3">
         Quick start

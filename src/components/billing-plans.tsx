@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { startStripeConnectAction } from "@/app/_actions";
-import type { Tier } from "@/lib/types";
 
 const INCLUDED: string[] = [
   "Unlimited invoices, every currency",
@@ -17,7 +16,6 @@ const INCLUDED: string[] = [
 export function BillingPlans({
   stripeAccountId,
 }: {
-  current: Tier;
   stripeAccountId?: string;
 }) {
   const [error, setError] = useState<string | null>(null);

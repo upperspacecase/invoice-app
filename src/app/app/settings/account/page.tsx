@@ -4,14 +4,11 @@ import { requireOnboardedSession } from "@/lib/server/auth";
 import { getWorkspace } from "@/lib/server/store";
 import { BusinessFields } from "@/components/business-fields";
 import { CurrencyDefaultPicker } from "@/components/currency-default-picker";
-import { FeatureBadge, FeatureLock, featureStatus } from "@/components/feature-lock";
-import { FEATURES } from "@/lib/features";
 import { BrandColorPicker } from "@/components/brand-color-picker";
 
 export default async function SettingsAccountPage() {
   const { uid } = await requireOnboardedSession();
-  const { business, clients, featureVotes } = await getWorkspace(uid);
-  const voted = (id: keyof typeof FEATURES) => featureVotes.includes(id);
+  const { business, clients } = await getWorkspace(uid);
 
   return (
     <div>
@@ -20,56 +17,16 @@ export default async function SettingsAccountPage() {
       </div>
       <BusinessFields business={business} />
 
-      <div className="flex items-center justify-between mt-10 mb-4">
-        <div className="text-xs uppercase tracking-widest text-mute">
-          Default currency
-        </div>
-        <FeatureBadge
-          feature="multi-currency"
-          userTier={business.tier}
-          voted={voted("multi-currency")}
-        />
+      <div className="text-xs uppercase tracking-widest text-mute mt-10 mb-4">
+        Default currency
       </div>
-      <FeatureLock
-        feature="multi-currency"
-        userTier={business.tier}
-        voted={voted("multi-currency")}
-      >
-        <CurrencyDefaultPicker current={business.currency} />
-      </FeatureLock>
+      <CurrencyDefaultPicker current={business.currency} />
 
-      <div className="flex items-center justify-between mt-10 mb-4">
-        <div className="text-xs uppercase tracking-widest text-mute">
-          Branding
-        </div>
-        <FeatureBadge
-          feature="branded-invoice"
-          userTier={business.tier}
-          voted={voted("branded-invoice")}
-        />
+      <div className="text-xs uppercase tracking-widest text-mute mt-10 mb-4">
+        Branding
       </div>
-      <BrandColorPicker
-        current={business.brandColor}
-        disabled={featureStatus("branded-invoice", business.tier) !== "allowed"}
-      />
-      <p className="text-[11px] text-mute mt-2">
-        Logo upload coming soon — click the badge above to vote.
-      </p>
-
-      <div className="flex items-center justify-between mt-10 mb-4">
-        <div className="text-xs uppercase tracking-widest text-mute">
-          Late-fee policy
-        </div>
-        <FeatureBadge
-          feature="late-fee-policy"
-          userTier={business.tier}
-          voted={voted("late-fee-policy")}
-        />
-      </div>
-      <div className="rounded-xl border border-rule p-4 bg-card text-sm text-mute">
-        Set <span className="font-mono">5% if 14 days overdue</span> once;
-        applied automatically.
-      </div>
+      <BrandColorPicker current={business.brandColor} />
+      <p className="text-[11px] text-mute mt-2">Logo upload coming soon.</p>
 
       <div className="text-xs uppercase tracking-widest text-mute mb-4 mt-10">
         Saved clients ({clients.length})

@@ -16,19 +16,13 @@ import { createInvoicePaymentLink } from "@/lib/stripe/payment-link";
 import { convert } from "@/lib/fx";
 import { currencyMeta } from "@/lib/currency";
 import { ANNUAL_FEE_CAP_MAJOR } from "@/lib/platform-fee";
-import type {
-  ActivityActor,
-  CurrencyCode,
-  DeliveryChannel,
-  Invoice,
-} from "@/lib/types";
+import type { ActivityActor, CurrencyCode, Invoice } from "@/lib/types";
 
 export type SendInvoiceInput = {
   clientId: string;
   amount: number;
   description: string;
   currency?: CurrencyCode;
-  channelOverride?: DeliveryChannel;
   actor?: ActivityActor;
 };
 
@@ -86,43 +80,32 @@ export async function sendInvoice(
     }
   }
 
-  if (invoice.channel === "email") {
-    const result = await sendInvoiceEmail({
-      business,
-      invoice,
-      replyTo: business.email,
-      paymentLinkUrl: invoice.paymentLinkUrl,
-    });
-    if (result.ok) {
-      await logActivity(
-        uid,
-        "system",
-        `Emailed ${invoice.id} to ${invoice.clientEmail}`,
-        `resend.id=${result.id}`
-      );
-    } else if (result.reason === "not-configured") {
-      await logActivity(
-        uid,
-        "system",
-        `Email skipped for ${invoice.id}`,
-        result.detail
-      );
-    } else {
-      await logActivity(
-        uid,
-        "system",
-        `Email failed for ${invoice.id}`,
-        result.detail
-      );
-    }
-  } else {
-    // Non-email channels stub-deliver — the integration adapters would push
-    // to QB/Xero/Slack here; for now we just note it on the activity feed.
+  const result = await sendInvoiceEmail({
+    business,
+    invoice,
+    replyTo: business.email,
+    paymentLinkUrl: invoice.paymentLinkUrl,
+  });
+  if (result.ok) {
     await logActivity(
       uid,
       "system",
-      `Would deliver ${invoice.id} via ${invoice.channel}`,
-      "integration adapter is stubbed",
+      `Emailed ${invoice.id} to ${invoice.clientEmail}`,
+      `resend.id=${result.id}`
+    );
+  } else if (result.reason === "not-configured") {
+    await logActivity(
+      uid,
+      "system",
+      `Email skipped for ${invoice.id}`,
+      result.detail
+    );
+  } else {
+    await logActivity(
+      uid,
+      "system",
+      `Email failed for ${invoice.id}`,
+      result.detail
     );
   }
 
@@ -136,9 +119,6 @@ export async function sendInvoiceReminder(
 ): Promise<Invoice | null> {
   const inv = await remindInvoice(uid, invoiceId, actor);
   if (!inv) return null;
-  if (inv.channel !== "email") {
-    return inv;
-  }
   const business = await getBusiness(uid);
   const fresh = (await getInvoice(uid, invoiceId)) ?? inv;
   const result = await sendReminderEmail({

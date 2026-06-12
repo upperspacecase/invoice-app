@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireOnboardedSession } from "@/lib/server/auth";
-import { getClient, listIntegrations } from "@/lib/server/store";
+import { getClient } from "@/lib/server/store";
 import { ClientEditForm } from "@/components/client-edit-form";
 
 export default async function ClientPage({
@@ -10,10 +10,7 @@ export default async function ClientPage({
 }) {
   const { uid } = await requireOnboardedSession();
   const { id } = await params;
-  const [client, integrations] = await Promise.all([
-    getClient(uid, id),
-    listIntegrations(uid),
-  ]);
+  const client = await getClient(uid, id);
   if (!client) notFound();
-  return <ClientEditForm client={client} integrations={integrations} />;
+  return <ClientEditForm client={client} />;
 }

@@ -2,20 +2,7 @@ import { apiAuthError, authenticateApi } from "@/lib/server/auth";
 import { listInvoices } from "@/lib/server/store";
 import { sendInvoice } from "@/lib/server/dispatch";
 import { isCurrencyCode } from "@/lib/currency";
-import type { CurrencyCode, DeliveryChannel, InvoiceStatus } from "@/lib/types";
-
-const DELIVERY: ReadonlyArray<DeliveryChannel> = [
-  "email",
-  "quickbooks",
-  "xero",
-  "slack",
-  "webhook",
-  "portal",
-];
-
-function isDelivery(v: unknown): v is DeliveryChannel {
-  return typeof v === "string" && DELIVERY.includes(v as DeliveryChannel);
-}
+import type { CurrencyCode, InvoiceStatus } from "@/lib/types";
 
 function isStatus(v: unknown): v is InvoiceStatus {
   return v === "sent" || v === "paid";
@@ -75,9 +62,6 @@ export async function POST(req: Request) {
   if (b.currency !== undefined && !isCurrencyCode(b.currency)) {
     return Response.json({ error: "Bad currency." }, { status: 400 });
   }
-  if (b.channelOverride !== undefined && !isDelivery(b.channelOverride)) {
-    return Response.json({ error: "Bad channel." }, { status: 400 });
-  }
 
   const inv = await sendInvoice(auth.uid, {
     clientId: b.clientId,
@@ -87,7 +71,6 @@ export async function POST(req: Request) {
         ? b.description.trim()
         : "Services rendered",
     currency: isCurrencyCode(b.currency) ? (b.currency as CurrencyCode) : undefined,
-    channelOverride: isDelivery(b.channelOverride) ? b.channelOverride : undefined,
     actor: "agent",
   });
   if (!inv) {

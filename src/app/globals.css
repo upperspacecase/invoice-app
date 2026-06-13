@@ -15,15 +15,19 @@
   --color-hivis: #f6f388; /* pale-yellow energy accent — sparingly */
   --color-danger: #c0392b; /* errors / destructive */
 
-  /* Utilitarian: square everything by default. rounded-full is left alone so
-     dots, avatars and status pips stay circular. One lever, whole app. */
-  --radius: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
+  /* Friendly, rounded geometry to match the goblin brand board. rounded-full
+     stays circular for dots/avatars. One lever, whole app. */
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+  --radius-3xl: 24px;
+
+  /* Soft brand shadow, replacing the old brutalist offset blocks. */
+  --shadow-soft: 0 10px 30px rgba(30, 61, 43, 0.1);
+  --shadow-soft-sm: 0 4px 14px rgba(30, 61, 43, 0.08);
 
   /* Compatibility aliases for retired tokens → resolve to the new palette so
      any lingering usage degrades gracefully instead of losing all color. */

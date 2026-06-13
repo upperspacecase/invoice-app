@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   payLink: {
     marginTop: 16,
     padding: 12,
-    borderRadius: 4,
+    borderRadius: 10,
     color: "#ffffff",
     textAlign: "center",
     fontFamily: "Helvetica-Bold",

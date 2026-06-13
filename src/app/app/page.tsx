@@ -53,7 +53,7 @@ export default async function LedgerPage() {
 
       <div
         className="bg-ink text-paper p-6 mb-8"
-        style={{ boxShadow: "5px 5px 0 var(--color-paid)" }}
+        style={{ boxShadow: "var(--shadow-soft)" }}
       >
         <div className="text-xs uppercase tracking-widest text-paper/60">
           Outstanding · {business.currency} equiv.
@@ -225,7 +225,7 @@ export default async function LedgerPage() {
         <Link
           href="/app/new"
           className="w-full h-14 bg-ink text-paper flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px]"
-          style={{ boxShadow: "4px 4px 0 var(--color-paid)" }}
+          style={{ boxShadow: "var(--shadow-soft)" }}
         >
           <Plus size={16} />
           Send invoice

@@ -162,7 +162,7 @@ export function SignInForm() {
         type="submit"
         disabled={status.kind === "sending" || !email.trim()}
         className="w-full h-12 bg-ink text-paper text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50"
-        style={{ boxShadow: "4px 4px 0 var(--color-paid)" }}
+        style={{ boxShadow: "var(--shadow-soft)" }}
       >
         {status.kind === "sending" ? "Sending…" : "Continue"}
       </button>

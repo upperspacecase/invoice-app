@@ -32,10 +32,10 @@ export function PricingBlock() {
         </h2>
 
         <div
-          className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] bg-card"
+          className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] bg-card rounded-2xl overflow-hidden"
           style={{
-            border: "1.5px solid var(--color-ink)",
-            boxShadow: "8px 8px 0 var(--color-ink)",
+            border: "1px solid var(--color-rule)",
+            boxShadow: "var(--shadow-soft)",
           }}
         >
           {/* Left: the offer */}
@@ -45,7 +45,7 @@ export function PricingBlock() {
           >
             <span
               className="inline-flex self-start items-center font-mono text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1.5 mb-7"
-              style={{ border: "1.5px solid var(--color-ink)" }}
+              style={{ border: "1px solid var(--color-rule)" }}
             >
               For tradies who hate chasing
             </span>
@@ -76,7 +76,7 @@ export function PricingBlock() {
 
             <div
               className="p-4 mt-7"
-              style={{ border: "1.5px solid var(--color-ink)" }}
+              style={{ border: "1px solid var(--color-rule)" }}
             >
               <div className="font-mono text-[10px] uppercase tracking-widest text-mute mb-1.5">
                 What about card fees?
@@ -116,7 +116,7 @@ export function PricingBlock() {
               style={{
                 height: 54,
                 background: "var(--color-paid)",
-                boxShadow: "4px 4px 0 var(--color-ink)",
+                boxShadow: "var(--shadow-soft)",
               }}
             >
               Start free

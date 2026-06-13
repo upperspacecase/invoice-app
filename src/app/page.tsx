@@ -94,7 +94,7 @@ function Hero() {
               style={{
                 height: 54,
                 background: "var(--color-paid)",
-                boxShadow: "4px 4px 0 var(--color-ink)",
+                boxShadow: "var(--shadow-soft)",
               }}
             >
               Start free

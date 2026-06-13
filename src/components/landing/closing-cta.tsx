@@ -32,7 +32,7 @@ export function ClosingCTA() {
             height: 54,
             background: "var(--color-hivis)",
             color: "var(--color-ink)",
-            boxShadow: "4px 4px 0 var(--color-paid)",
+            boxShadow: "var(--shadow-soft)",
           }}
         >
           Start free

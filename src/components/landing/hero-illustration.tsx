@@ -19,15 +19,15 @@ export function HeroIllustration() {
   return (
     <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
       <div
-        className="bg-card"
+        className="bg-card rounded-2xl overflow-hidden"
         style={{
-          border: "1.5px solid var(--color-ink)",
-          boxShadow: "6px 6px 0 var(--color-ink)",
+          border: "1px solid var(--color-rule)",
+          boxShadow: "var(--shadow-soft)",
         }}
       >
         <div
           className="flex items-center justify-between px-5 py-3"
-          style={{ borderBottom: "1.5px solid var(--color-ink)" }}
+          style={{ borderBottom: "1px solid var(--color-rule)" }}
         >
           <span className="font-mono text-xs uppercase tracking-widest font-semibold">
             Invoice #1037
@@ -45,7 +45,7 @@ export function HeroIllustration() {
 
         <div
           className="px-5 py-4"
-          style={{ borderBottom: "1.5px solid var(--color-ink)" }}
+          style={{ borderBottom: "1px solid var(--color-rule)" }}
         >
           <div className="text-sm font-medium">Switchboard upgrade</div>
           <div className="font-mono text-xs text-mute mt-1">
@@ -87,7 +87,7 @@ export function HeroIllustration() {
 
         <div
           className="px-5 py-4"
-          style={{ borderTop: "1.5px solid var(--color-ink)" }}
+          style={{ borderTop: "1px solid var(--color-rule)" }}
         >
           <p className="text-[13px] italic text-mute leading-relaxed">
             You&apos;ll receive{" "}
@@ -109,7 +109,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="px-5 py-3 flex items-center gap-4"
-      style={{ borderBottom: "1.5px solid var(--color-ink)" }}
+      style={{ borderBottom: "1px solid var(--color-rule)" }}
     >
       <span className="font-mono text-[10px] uppercase tracking-widest text-mute w-12 shrink-0">
         {label}

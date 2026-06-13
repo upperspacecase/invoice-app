@@ -122,7 +122,7 @@ export function OnboardingForm({ initial }: { initial: Business }) {
             type="submit"
             disabled={pending}
             className="h-11 px-6 bg-ink text-paper text-xs font-bold uppercase tracking-widest transition-transform active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-50 inline-flex items-center gap-2"
-            style={{ boxShadow: "4px 4px 0 var(--color-paid)" }}
+            style={{ boxShadow: "var(--shadow-soft)" }}
           >
             {pending ? "Saving…" : "Continue"}
             <ArrowRight size={14} />

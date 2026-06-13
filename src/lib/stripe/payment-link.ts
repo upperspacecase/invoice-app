@@ -45,6 +45,10 @@ export async function createInvoicePaymentLink(input: {
 
     // 1% of the invoice in minor units, clamped to the remaining annual cap
     // room. Omitted from the link when it rounds to 0 (cap already reached).
+    // 1% clamped to the remaining annual cap. Note: the cap is checked at link
+    // CREATION against fees from already-paid invoices, so a burst of large
+    // invoices all paid before the YTD total catches up can slightly overshoot
+    // £2,000/yr. Accepted at current volume — see the spec's fee-cap edge case.
     const onePercent = input.invoice.amount * PLATFORM_FEE_RATE * scale;
     const feeMinor = clampFeeMinor(onePercent, input.maxFeeMinor);
 

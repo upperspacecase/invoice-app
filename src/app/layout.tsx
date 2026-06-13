@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Rokkitt, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -50,7 +51,10 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${rokkitt.variable} ${jetbrainsMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

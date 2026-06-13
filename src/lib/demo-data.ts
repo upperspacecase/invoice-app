@@ -5,7 +5,7 @@ export const initialBusiness: Business = {
   email: "",
   payment: "",
   company: "",
-  currency: "USD",
+  currency: "GBP",
   onboarded: true,
 };
 

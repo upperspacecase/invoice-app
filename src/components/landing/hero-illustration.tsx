@@ -1,21 +1,40 @@
 import { Check } from "lucide-react";
+import { chasePlan, formatChaseDate } from "@/lib/followup-cadence";
+
+const DAY = 24 * 60 * 60 * 1000;
 
 // The trust win: show Nudge's plan up front — what it will do and when — plus
-// the tradie's exact net after fees, stated plainly. Not a nag log; a schedule
-// that proves the assistant knows the terms.
-const PLAN = [
-  { label: "Sent with pay link", note: "", date: "12 June", done: true },
-  {
-    label: "Friendly reminder",
-    note: "3 days before due",
-    date: "27 June",
-    done: false,
-  },
-  { label: "Follow-up", note: "if unpaid", date: "3 July", done: false },
-  { label: "Firmer nudge", note: "", date: "14 July", done: false },
-] as const;
+// the tradie's exact net after fees. Dates are computed from "today" at render
+// (the landing page revalidates daily) so the card never shows a stale date.
+const NOTES = ["", "3 days before due", "if unpaid", ""];
+
+// Module-level (out of component render scope) so the Date.now() read is
+// allowed. The landing page revalidates daily, so these stay current.
+function heroData() {
+  const now = Date.now();
+  const due = now + 14 * DAY;
+  const rows = [
+    {
+      label: "Sent with pay link",
+      note: "",
+      date: formatChaseDate(now),
+      done: true,
+    },
+    ...chasePlan({ sentAt: now, dueAt: due })
+      .slice(0, 3)
+      .map((s, i) => ({
+        label: s.label,
+        note: NOTES[i + 1] ?? "",
+        date: formatChaseDate(s.at),
+        done: false,
+      })),
+  ];
+  return { due: formatChaseDate(due), rows };
+}
 
 export function HeroIllustration() {
+  const { due, rows } = heroData();
+
   return (
     <div className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
       <div
@@ -49,7 +68,7 @@ export function HeroIllustration() {
         >
           <div className="text-sm font-medium">Switchboard upgrade</div>
           <div className="font-mono text-xs text-mute mt-1">
-            £1,850 · Due 30 June
+            £1,850 · Due {due}
           </div>
         </div>
 
@@ -58,7 +77,7 @@ export function HeroIllustration() {
             Nudge&apos;s plan
           </div>
           <ul className="space-y-2.5">
-            {PLAN.map((p) => (
+            {rows.map((p) => (
               <li key={p.label} className="flex items-center gap-3 text-xs">
                 {p.done ? (
                   <span

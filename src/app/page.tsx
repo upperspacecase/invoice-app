@@ -6,6 +6,9 @@ import { ClosingCTA } from "@/components/landing/closing-cta";
 import { PricingBlock } from "@/components/pricing-block";
 import { Wordmark } from "@/components/wordmark";
 
+// Re-render daily so the hero card's computed chase dates stay current.
+export const revalidate = 86400;
+
 export default function LandingPage() {
   return (
     <div
@@ -120,19 +123,44 @@ function Hero() {
 function MeetNudge() {
   return (
     <section className="px-6 sm:px-10 lg:px-14 pb-12 sm:pb-16">
-      <div className="max-w-3xl mx-auto">
+      <div
+        className="max-w-3xl mx-auto rounded-2xl border border-rule bg-card p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6"
+        style={{ boxShadow: "var(--shadow-soft-sm)" }}
+      >
         <Image
-          src="/brand/meet-nudge.png"
-          alt="Meet Nudge. He keeps the admin moving so you can keep doing what you do best."
-          width={666}
-          height={412}
-          className="w-full h-auto"
-          sizes="(max-width: 768px) 100vw, 768px"
+          src="/brand/nudge-goblin.png"
+          alt="Nudge, the invoicing assistant"
+          width={132}
+          height={132}
+          className="rounded-2xl flex-shrink-0"
         />
+        <div>
+          <h2
+            className="font-display text-2xl sm:text-3xl leading-tight tracking-tight"
+            style={{ fontWeight: 800, letterSpacing: "-0.02em" }}
+          >
+            Meet Nudge.
+          </h2>
+          <p className="text-sm sm:text-base text-mute mt-2 leading-relaxed max-w-md">
+            He keeps the admin moving so you can keep doing what you do best.
+          </p>
+          <div
+            className="inline-block mt-4 px-3 py-1.5 rounded-lg font-mono text-[11px] uppercase tracking-widest"
+            style={{ background: "var(--color-hivis)", color: "var(--color-ink)" }}
+          >
+            Jobs done. Payments follow.
+          </div>
+        </div>
       </div>
     </section>
   );
 }
+
+const HOW_STEPS = [
+  { n: 1, text: "You send the invoice." },
+  { n: 2, text: "Nudge sends friendly reminders and keeps track." },
+  { n: 3, text: "You get paid. Nudge says thanks." },
+] as const;
 
 function HowItWorks() {
   return (
@@ -140,15 +168,33 @@ function HowItWorks() {
       id="how-it-works"
       className="px-6 sm:px-10 lg:px-14 pb-16 sm:pb-20"
     >
-      <div className="max-w-3xl mx-auto">
-        <Image
-          src="/brand/how-it-works.png"
-          alt="You do the job. Nudge does the follow-up. 1 — You send the invoice. 2 — Nudge sends friendly reminders and keeps track. 3 — You get paid. Nudge says thanks."
-          width={660}
-          height={422}
-          className="w-full h-auto"
-          sizes="(max-width: 768px) 100vw, 768px"
-        />
+      <div className="max-w-3xl mx-auto text-center">
+        <h2
+          className="font-display leading-tight tracking-tight"
+          style={{
+            fontWeight: 800,
+            fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          You do the job.{" "}
+          <span style={{ color: "var(--color-paid-deep)" }}>Nudge</span> does
+          the follow-up.
+        </h2>
+        <div className="mt-10 grid sm:grid-cols-3 gap-6 sm:gap-4 text-left">
+          {HOW_STEPS.map((s) => (
+            <div key={s.n} className="flex sm:flex-col items-start gap-3">
+              <span
+                className="w-9 h-9 rounded-full flex items-center justify-center text-paper font-display flex-shrink-0"
+                style={{ background: "var(--color-paid)", fontWeight: 700 }}
+                aria-hidden
+              >
+                {s.n}
+              </span>
+              <p className="text-sm sm:text-base leading-relaxed">{s.text}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

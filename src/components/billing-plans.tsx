@@ -10,7 +10,7 @@ const INCLUDED: string[] = [
   "Card or bank — your client pays their way",
   "Automatic follow-up on unpaid invoices",
   "Money lands in your bank, not ours",
-  "1% only when an invoice gets paid — capped at $2,000/yr",
+  "1% only when an invoice gets paid — capped at £2,000/yr (in your currency)",
 ];
 
 export function BillingPlans({
@@ -52,7 +52,8 @@ export function BillingPlans({
       </div>
       <p className="text-sm text-mute mt-1 leading-relaxed max-w-md">
         No monthly fee. Nudge takes 1% of an invoice only when the money lands
-        — capped at $2,000 a year. You only pay when you get paid.
+        — capped at £2,000 a year in your currency. You only pay when you get
+        paid.
       </p>
 
       <div
@@ -111,8 +112,8 @@ export function BillingPlans({
       </div>
 
       <p className="text-[11px] text-mute mt-6 leading-relaxed">
-        Stripe Connect activates when Stripe keys are configured. Without keys
-        the connect button is a demo — useful for previewing the flow.
+        Connect once and every invoice gets a pay link. Money settles into your
+        own Stripe account — Nudge never holds it.
       </p>
     </div>
   );

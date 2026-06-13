@@ -20,9 +20,24 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nudge — free invoicing, 1% to get paid",
+  metadataBase: new URL("https://nudgeinvoicing.pro"),
+  title: "Nudge — free invoicing, 1% when you're paid",
   description:
     "Send invoices free. Nudge chases them until you're paid — and takes 1% only when the money lands.",
+  openGraph: {
+    title: "Nudge — friendly invoice follow-up for busy tradies",
+    description:
+      "Send invoices free. Nudge chases them until you're paid — 1% only when the money lands.",
+    url: "https://nudgeinvoicing.pro",
+    siteName: "Nudge",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nudge — friendly invoice follow-up for busy tradies",
+    description:
+      "Send invoices free. Nudge chases them until you're paid — 1% only when the money lands.",
+  },
 };
 
 export default function RootLayout({

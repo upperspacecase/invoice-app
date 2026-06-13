@@ -208,7 +208,15 @@ function Footer() {
     >
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-widest text-mute">
         <Wordmark size="sm" />
-        <span>© {new Date().getFullYear()} — Free to send · 1% when you&apos;re paid</span>
+        <div className="flex items-center gap-5">
+          <Link href="/terms" className="hover:text-paid-deep">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:text-paid-deep">
+            Privacy
+          </Link>
+          <span>© {new Date().getFullYear()} — Free to send · 1% when you&apos;re paid</span>
+        </div>
       </div>
     </footer>
   );

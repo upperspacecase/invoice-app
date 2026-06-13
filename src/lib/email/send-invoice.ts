@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { formatMoney } from "@/lib/currency";
 import { renderInvoicePdf } from "@/lib/pdf/invoice-pdf";
 import { displayId } from "@/lib/invoice-display";
+import { brandedEmailHtml } from "./template";
 import { draftFollowupBody } from "./followup-copy";
 import type { Business, FollowupStage, Invoice } from "@/lib/types";
 
@@ -63,25 +64,40 @@ export async function sendInvoiceEmail(
   const total = formatMoney(invoice.amount, invoice.currency, {
     withCode: true,
   });
-  const lines = [
+  const body = [
     `Hi ${invoice.clientName.split(/[\s,]+/)[0] || "there"},`,
     "",
     `Here's invoice ${docId} for ${total}, due ${formatDueDate(invoice.dueAt)}.`,
     invoice.description ? `For: ${invoice.description}` : "",
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+  const footerLines = [
+    `Pay via: ${business.payment}`,
+    "Reply to this email with any questions.",
+  ];
+  const signoff = `— ${business.name}`;
+  const lines = [
+    body,
     "",
     input.paymentLinkUrl ? `Pay now: ${input.paymentLinkUrl}` : "",
     input.publicPdfUrl ? `PDF: ${input.publicPdfUrl}` : "",
     "",
-    `Pay via: ${business.payment}`,
+    ...footerLines,
     "",
-    `Reply to this email with any questions.`,
-    "",
-    `— ${business.name}`,
+    signoff,
   ]
     .filter((l) => l !== "")
     .join("\n");
 
-  const html = textToHtml(lines, business.brandColor);
+  const html = brandedEmailHtml({
+    businessName: business.name,
+    body,
+    payUrl: input.paymentLinkUrl,
+    payLabel: "View & Pay Invoice",
+    footerLines,
+    signoff,
+  });
 
   let pdf: Buffer;
   if (input.pdfOverride) {
@@ -172,17 +188,20 @@ export async function sendReminderEmail(input: {
   // Nudge writes the message as the assistant (LLM when configured, staged
   // template otherwise); we own the pay link + payment lines + sign-off.
   const body = await draftFollowupBody({ business, invoice, stage });
+  const footerLines = [
+    `Or pay direct: ${business.payment}`,
+    "If it's already on its way, or something needs adjusting, just reply and I'll pass it straight on.",
+  ];
+  const signoff = `Nudge — on behalf of ${business.name}`;
   const lines = [
     body,
     "",
     input.paymentLinkUrl ? `Pay now: ${input.paymentLinkUrl}` : "",
     "",
-    `Or pay direct: ${business.payment}`,
+    ...footerLines,
     "",
-    `If it's already on its way, or something needs adjusting, just reply and I'll pass it straight on.`,
-    "",
-    `Thanks so much,`,
-    `Nudge — on behalf of ${business.name}`,
+    "Thanks so much,",
+    signoff,
   ]
     .filter((l) => l !== "")
     .join("\n");
@@ -194,7 +213,15 @@ export async function sendReminderEmail(input: {
       replyTo: input.replyTo || business.email,
       subject,
       text: lines,
-      html: textToHtml(lines, business.brandColor),
+      html: brandedEmailHtml({
+        businessName: business.name,
+        body,
+        payUrl: input.paymentLinkUrl,
+        payLabel: "View & Pay Invoice",
+        footerLines,
+        signoff,
+        onBehalf: true,
+      }),
       ...(input.attachment ? { attachments: [input.attachment] } : {}),
     });
     if (result.error) {
@@ -210,26 +237,3 @@ export async function sendReminderEmail(input: {
   }
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) =>
-    c === "&"
-      ? "&amp;"
-      : c === "<"
-      ? "&lt;"
-      : c === ">"
-      ? "&gt;"
-      : c === '"'
-      ? "&quot;"
-      : "&#39;"
-  );
-}
-
-function textToHtml(text: string, accent?: string): string {
-  const body = escapeHtml(text)
-    .replace(
-      /(https?:\/\/[^\s]+)/g,
-      `<a href="$1" style="color:${accent || "#1f8f50"};text-decoration:underline">$1</a>`
-    )
-    .replace(/\n/g, "<br/>");
-  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#1c1f1a;max-width:560px;margin:0 auto;padding:24px">${body}</div>`;
-}
